@@ -36,6 +36,10 @@
  */
 
 
+/* This is used in the Linked List assignment, if OPT_CONCURRENT_LIST is set */
+int linkedlist_test_runtests(int, char **);
+
+
 /*
  * Test code.
  */

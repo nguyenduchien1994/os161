@@ -421,6 +421,15 @@ defoption netfs
 # Note that "emufs" is completely contained in the "emu" device.
 #
 
+######################################
+#                                    #
+#  Concurrent Linked List assignment #
+#                                    #
+######################################
+
+defoption concurrent_list
+optfile   concurrent_list  concurrentlist/linkedlist.c
+optfile   concurrent_list  concurrentlist/linkedlisttest.c
 
 ########################################
 #                                      #

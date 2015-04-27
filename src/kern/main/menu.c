@@ -43,6 +43,7 @@
 #include <test.h>
 #include "opt-sfs.h"
 #include "opt-net.h"
+#include "opt-concurrent_list.h"
 
 /*
  * In-kernel menu and command dispatcher.
@@ -468,6 +469,9 @@ static const char *testmenu[] = {
 	"[tt1] Thread test 1                 ",
 	"[tt2] Thread test 2                 ",
 	"[tt3] Thread test 3                 ",
+#if OPT_CONCURRENT_LIST
+	"[llt] Linked List Tests             ",
+#endif
 #if OPT_NET
 	"[net] Network test                  ",
 #endif
@@ -571,7 +575,12 @@ static struct {
 	{ "tt3",	threadtest3 },
 	{ "sy1",	semtest },
 
-	/* synchronization assignment tests */
+  /* PROJ 1 Tests */
+#if OPT_CONCURRENT_LIST
+	{ "llt", linkedlist_test_runtests },
+#endif
+
+	/* PROJ 2 Tests */
 	{ "sy2",	locktest },
 	{ "sy3",	cvtest },
 	{ "sy4",	cvtest2 },
