@@ -44,6 +44,7 @@
 #include "opt-sfs.h"
 #include "opt-net.h"
 #include "opt-concurrent_list.h"
+#include "opt-shared_buffer.h"
 
 /*
  * In-kernel menu and command dispatcher.
@@ -472,6 +473,9 @@ static const char *testmenu[] = {
 #if OPT_CONCURRENT_LIST
 	"[llt] Linked List Tests             ",
 #endif
+#if OPT_SHARED_BUFFER
+	"[sbt] Shared Buffer Tests           ",
+#endif
 #if OPT_NET
 	"[net] Network test                  ",
 #endif
@@ -584,6 +588,9 @@ static struct {
 	{ "sy2",	locktest },
 	{ "sy3",	cvtest },
 	{ "sy4",	cvtest2 },
+#if OPT_SHARED_BUFFER
+	{ "sbt",  shared_buffer_run_tests },
+#endif
 
 	/* file system assignment tests */
 	{ "fs1",	fstest },

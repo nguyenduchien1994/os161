@@ -431,6 +431,16 @@ defoption concurrent_list
 optfile   concurrent_list  concurrentlist/linkedlist.c
 optfile   concurrent_list  concurrentlist/linkedlisttest.c
 
+######################################
+#                                    #
+#  Shared Buffer assignment          #
+#                                    #
+######################################
+
+defoption shared_buffer
+optfile   shared_buffer    shared_buffer/shared_buffer.c
+optfile   shared_buffer    shared_buffer/shared_buffer_test.c
+
 ########################################
 #                                      #
 #              Test code               #
