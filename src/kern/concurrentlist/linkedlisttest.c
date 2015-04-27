@@ -1,3 +1,4 @@
+#include <types.h>
 #include <linkedlist.h>
 #include <lib.h>
 #include <thread.h>
@@ -32,16 +33,16 @@ int linkedlist_test_runtests(int nargs, char **args)
     Linked_List * list = linkedlist_create();
   
     thread_fork("adder 1",
+		NULL,
 		linkedlist_test_adder,
 		list,
-		1,
-		NULL);
+		1);
 
     thread_fork("adder 2",
+		NULL,
 		linkedlist_test_adder,
 		list,
-		2,
-		NULL);
+		2);
 
     // XXX - Bug - We're returning from this function without waiting
     // for these two threads to finish.  The execution of these
