@@ -1,0 +1,12 @@
+build
+.depend
+src/*.mk
+
+# emacs buffers #
+*~
+
+# No compiled code #
+root/*
+
+# No project build #
+src/kern/compile/*
