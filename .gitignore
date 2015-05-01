@@ -1,6 +1,6 @@
 build
 .depend
-src/*.mk
+defs.mk
 
 # emacs buffers #
 *~
