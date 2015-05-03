@@ -108,7 +108,7 @@ uiomove(void *ptr, size_t n, struct uio *uio)
 			    panic("uiomove: Invalid uio_segflg %d\n",
 				  (int)uio->uio_segflg);
 		}
-
+		
 		iov->iov_len -= size;
 		uio->uio_resid -= size;
 		uio->uio_offset += size;
