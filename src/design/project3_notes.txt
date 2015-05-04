@@ -1,0 +1,50 @@
+What are the major components that you will have to add to OS/161 and how will they interact with OS/161?  To this end you may want to discuss your answers to the following questions.
+
+Will there be one or many kernel threads?  Preemptive or non-preemptive.
+     One kernel threads (easier), also don't need to worry out preemptive or non-preemptive
+
+What data structures will you need to add?  Be specific as possible here, perhaps even writing out the structs you will be adding to or defining.
+     PCB, 
+
+How will you handle process termination?  How will this effect parent / child processes?
+    Will more to dead/terminate queue. If parents die their childern will die by default. If child does doen't effect parent
+How does your implementation protect the kernel data structures?
+
+How does your implementation protect the kernel and user processes from rogue processes?
+    currently doesn't because don't have protective memory
+
+What kind of scheduling policy will you implement?  Why?
+     Round Robin why easier and better then FIFO.
+
+How will you manage concurrent file accesses? 
+    Don't allow it, there is a lock on file system? so only one thing can view it at a time
+    
+How will you deal with transferring data from user space to kernel space to user space (e.g., when you are writing exec)?  What built-in features of OS/161 will you use to do this?
+
+
+For each system call you should discuss the following (reflect on and refer to the man pages for the syscall while discussing it) :
+
+What which of your components and OS/161 with it interface with?
+
+What kernel data structures will it have to access and modify?
+
+Will synchronization be required to protect data structures or communicate between processes / kernel threads?
+
+What error states can occur and how will you handle them?
+
+Will data need to be moved between user space and kernel space?
+
+For fork, execv, and waitpid you should attempt to be as detailed as possible for how you expect to implemented them.
+
+Think about how you will split up your implementation among your team members.  Describe what each team member is responsible for (for some of the core systems all team members will likely be responsible in some way).
+
+Give a time line of implementation focusing on what components need to be implemented before other components.  (I'm not looking for deadlines, though you can set those for your own benefit.)
+
+Briefly discuss how you are going to work together as a group, how you are going to manage access to the repository, and what base code you will be starting from or porting.
+
+
+Questions for Matt
+1) program counter - is it built in? If not is it per file or for whole kernel?
+2) is dev/file ownership mutex? locks handles? otherwise object to only be owned by 1 process?  
+3) how can we get protected memory?
+4)  
