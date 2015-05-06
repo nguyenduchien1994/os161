@@ -12,17 +12,14 @@ struct PCB {
 	spinlock p_lock;
     	struct thread array pthreads;
 	struct addrspace *paddrspace;
-	struct vnode * p_cwd;
+	struct vnode *p_cwd;
 	/* need */
 	pid_t pid;
-	pc_t counter;
-	<registers>
-	file_list * files; //(file_list = array)
-	dev_list * devices; //(dev_list = devices)
-	<accounting-time to proc time?>
-	proc_queue * children;
-	proc * parent;
-	<proc status_in registers?>
+	pc_t program_counter;
+	trap_frame *reg;
+	vnode **open_files;//array
+	PCB *parent;
+	linked_list *children;
 }
 
 We will handle process termination by removing the PCB from memory and freeing all of the variables. If parents die their children will die by default. If child does doesn't effect parent.
@@ -31,17 +28,17 @@ Our implementation protect the kernel and user processes from rogue processes wi
 
 We will manage concurrent file accesses by not allowing it and we will do this by putting a lock one each file so only one process can access a file. 
 
-Scheduler
-When scheduling we will need to first make sure that the current process and the current thread are correct and correctly mapped to each other, as well as making user that it is in the ready state. Once these checks are done we will release the lock, then thread_yield() because it is one-to-one. Next, we will acquire lock making the process fun. Then we will make the current process equal the current thread mapping. Our scheduler will be a round robin because it is better than first in first out. 
+Scheduling:
+When scheduling we will need to first make sure that the current process and the current thread are correct and correctly mapped to each other, as well as making user that it is in the ready state. Once these checks are done we will release the lock, then thread_yield() because it is one-to-one. Next, we will acquire lock making the process fun. Then we will make the current process equal the current thread mapping. Our scheduler will be a round robin because it is already implemented in OS161. 
 
-Global Management
+Global Management:
 In the global management, we will have an array of all the processes and an array of the all the threads. Both arrays will be mapped to each other by the indices and the maximum length will be 256. The Global Management will also have a process lock. 
 
-Handling File Systems
+Handling File Systems:
 Open Tracking
 In the PCB, we will have an array of files that are open and the maximum length of the file is 32. To keep track of all of the files the next available slot we will use a stack. We will then give the vnode a "p-lock". This way in order to access, we need to own the p_lock and if we own it then we can added it to our list of open files list and this will be atomic. When we remove the file from our list by closing the file, we will release the p_lock. We are also planning on using the file system directly instead of creating our own large list of files. If the process tries to open or own too many files, we will kill the process. 
 
-Syscalls
+Syscalls:
 open
 This will interface with the file system. We will call vfs_open and then acquire the lock and to list. It will have to access the file system, PCB and global management. Different error that occur are if the filename doesn't exist, it is not in the directory or etc. This will be handled by returning an error code. No data will need to be moved between user space and kernel space. 
 
