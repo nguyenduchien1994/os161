@@ -2,8 +2,9 @@ build
 .depend
 defs.mk
 
-# emacs buffers #
+# buffers #
 *~
+\#*
 
 # No compiled code #
 root/*

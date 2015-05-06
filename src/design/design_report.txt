@@ -1,0 +1,7 @@
+Design Report
+Julia Isaac, Tristan Johnson and Hien Hguyen
+ 
+Process Management
+Scheduler
+
+Handling File Systems
