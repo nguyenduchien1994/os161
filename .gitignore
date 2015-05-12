@@ -11,3 +11,6 @@ root/*
 
 # No project build #
 src/kern/compile/*
+
+# Mac Problems #
+*DS_Store
