@@ -456,3 +456,12 @@ file		test/synchtest.c
 file		test/kmalloctest.c
 file		test/fstest.c
 optfile net	test/nettest.c
+
+
+########################################
+#                                      #
+#              Syscalls                #
+#                                      #
+########################################
+
+file syscall/exit.c
