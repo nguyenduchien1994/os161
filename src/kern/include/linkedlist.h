@@ -2,6 +2,7 @@
 #define _LINKEDLIST_H_
 
 #include <types.h>
+#include <synch.h>
 
 typedef struct Linked_List_Node Linked_List_Node;
 
@@ -18,6 +19,7 @@ struct Linked_List {
   Linked_List_Node *first;
   Linked_List_Node *last;
   int length;
+  struct lock * lk;
 };
 
 Linked_List *linkedlist_create(void);

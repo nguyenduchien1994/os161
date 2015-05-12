@@ -1,5 +1,9 @@
+#include <types.h>
 #include <linkedlist.h>
 #include <lib.h>
+#include <test.h>
+#include <array.h>
+#include <synch.h>
 
 Linked_List *linkedlist_create(void)
 {
@@ -7,7 +11,8 @@ Linked_List *linkedlist_create(void)
     ptr -> length = 0;
     ptr -> first = NULL;
     ptr -> last = NULL;
-    
+    ptr -> lk = lock_create("Linked_List lock");
+
     return ptr;
 }
 
@@ -24,34 +29,141 @@ Linked_List_Node *linkedlist_create_node(int key, void *data)
 
 void linkedlist_prepend(Linked_List *list, void *data)
 {
-    Linked_List_Node * newnode;
-    Linked_List_Node * f = list -> first;
-  
-    if (list -> first == NULL) {
-	newnode = linkedlist_create_node(0, data);
-	list -> first = newnode;
-	list -> last = newnode;
-    } else {
-	newnode = linkedlist_create_node(f -> key - 1, data);
-	
-	newnode -> next = list -> first;
-	f -> prev = newnode;
-	list -> first = newnode;
-    }
+	if (list != NULL) {
+		lock_acquire(list -> lk);
 
-    list -> length ++;
+		Linked_List_Node * newnode;
+		Linked_List_Node * f = list -> first;
+		
+		if (list -> first == NULL) {
+			newnode = linkedlist_create_node(0, data);
+			list -> first = newnode;
+			list -> last = newnode;
+		} else {
+			newnode = linkedlist_create_node(f -> key - 1, data);
+			
+			newnode -> next = list -> first;
+			f -> prev = newnode;
+			list -> first = newnode;
+		}
+		
+		list -> length ++;
+		
+		lock_release(list -> lk);
+	}
 }
+
 
 void linkedlist_printlist(Linked_List *list, int which)
 {
-    Linked_List_Node *runner = list -> first;
+	if (list != NULL)	{
+		lock_acquire(list -> lk); 
 
-    kprintf("%d: ", which);
+		Linked_List_Node *runner = list -> first;
+		
+		kprintf("%d: ", which);
+		kprintf("(len = %d) ", list -> length);
+		
+		while (runner != NULL) {
+			kprintf("%d[%c] ", runner -> key, *((int *)runner -> data));
+			runner = runner -> next;
+		}
+		
+		kprintf("\n");
+		lock_release(list -> lk);
+	}
+}
+
+
+
+void linkedlist_insert(Linked_List *list, int key, void *data) {
+
+  if (list != NULL) {
+		
+		lock_acquire(list -> lk); 
+
+    Linked_List_Node *node = linkedlist_create_node(key, data);
     
-    while (runner != NULL) {
-	kprintf("%d[%c] ", runner -> key, *((int *)runner -> data));
-	runner = runner -> next;
+    Linked_List_Node *curr = list -> first;
+    
+    if (curr == NULL) {
+      // Test 3 - Yield so both threads think the list is empty when inserting.
+      yield_if_should(3);
+      list -> first = node;
+      list -> last = node;
+    } else if (curr -> key >= key) {
+      list -> first = node;
+      node -> next = curr;
+      curr -> prev = node;
+    } else {
+      while (curr -> next != NULL && curr -> next -> key < key) {
+				curr = curr -> next;
+      }
+
+      if (curr -> next == NULL) {
+				list -> last = node;
+      } else {
+				curr -> next -> prev = node;
+      }
+			
+      node -> next = curr -> next;
+      node -> prev = curr;
+      // Test 5 - Yield so first thread's node at curr and curr ->
+      // next, but neither ends up pointing back at it.  The second
+      // thread's node does get inserted correctly. 
+      yield_if_should(5);
+      curr -> next = node;
+			
     }
     
-    kprintf("\n");
+    int length = list -> length;
+    length ++;
+    // Test 6 - Yield so list -> length is corrupted -- simulates
+    // yielding between asm instructions for list -> length ++;
+    yield_if_should(6);
+    list -> length = length;
+
+		lock_release(list -> lk);		
+  }
+
+}
+
+void * linkedlist_remove_head(Linked_List *list, int *key) {
+
+
+	void * data = NULL;
+	
+	if (list != NULL)	{
+
+		lock_acquire(list -> lk);
+
+		if (list -> first != NULL) {
+			
+			Linked_List_Node * node = list -> first;
+			data = node -> data;
+			if (key != NULL)
+				*key = node -> key;
+			
+			// Test 4 - Yield so both threads have the same node to remove.
+			yield_if_should(4);
+			list -> first = node -> next;
+			
+			if (list -> first == NULL) 
+				list -> last = NULL;
+			else 
+				list -> first -> prev = NULL;
+      
+			// Test 4 - Thread 2 - Error here on second deallocation of the same node.
+			kfree(node);  
+
+			list -> length --;
+
+		}
+	
+		lock_release(list -> lk);
+	}
+	
+
+  return data;
+
 }

@@ -38,7 +38,10 @@
 
 /* This is used in the Linked List assignment, if OPT_CONCURRENT_LIST is set */
 int linkedlist_test_runtests(int, char **);
+void yield_if_should(int location);
 
+/* Runs shared buffer tests from menu. */
+int shared_buffer_run_tests(int, char **);
 
 /*
  * Test code.
