@@ -43,6 +43,19 @@ void syscall(struct trapframe *tf);
 /*
  * Support functions.
  */
+void _exit(int exitcode);
+int open(const char *filename, int flags);
+ssize_t read(int fd, void *buf, size_t buflen);
+ssize_t write(int fd, const void *buf, size_t nbytes);
+off_t lseek(int fd, off_t pos, int whence);
+int close(int fd);
+int dup2(int oldfd, int newfd);
+int chdir(const char *pathname);
+int __getcwd(char *buf, size_t buflen);
+pid_t getpid(void);
+pid_t fork(void);
+int execv(const char *program, char **args);
+pid_t waitpid(pid_t pid, int *status, int options);
 
 /* Helper for fork(). You write this. */
 void enter_forked_process(struct trapframe *tf);
