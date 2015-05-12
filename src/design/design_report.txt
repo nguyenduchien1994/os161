@@ -26,7 +26,7 @@ We will handle process termination by removing the PCB from memory and freeing a
 
 Our implementation protect the kernel and user processes from rogue processes with scheduling and locks. 
 
-We will manage concurrent file accesses by not allowing it and we will do this by putting a lock one each file so only one process can access a file. 
+Current file accesses are handled by the file system, only problem if shared vnode so lock vnode (only happens after copy on fork, so store lock with vnode in PCB)
 
 Scheduling:
 When scheduling we will need to first make sure that the current process and the current thread are correct and correctly mapped to each other, as well as making user that it is in the ready state. Once these checks are done we will release the lock, then thread_yield() because it is one-to-one. Next, we will acquire lock making the process fun. Then we will make the current process equal the current thread mapping. Our scheduler will be a round robin because it is already implemented in OS161. 
@@ -36,7 +36,7 @@ In the global management, we will have an array of all the processes and an arra
 
 Handling File Systems:
 Open Tracking
-In the PCB, we will have an array of files that are open and the maximum length of the file is 32. To keep track of all of the files the next available slot we will use a stack. We will then give the vnode a "p-lock". This way in order to access, we need to own the p_lock and if we own it then we can added it to our list of open files list and this will be atomic. When we remove the file from our list by closing the file, we will release the p_lock. We are also planning on using the file system directly instead of creating our own large list of files. If the process tries to open or own too many files, we will kill the process. 
+In the PCB, we will have an array of files that are open and the maximum length of the file is 32. To keep track of all of the files the next available slot we will use a stack. We will then give the vnode a "p-lock". This way in order to access, we need to own the p_lock. When we remove the file from our list by closing the file, we will release the p_lock. We are also planning on using the file system directly instead of creating our own large list of files. If the process tries to open or own too many files, we will kill the process. 
 
 Syscalls:
 open
