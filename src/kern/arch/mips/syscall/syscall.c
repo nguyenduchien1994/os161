@@ -110,6 +110,15 @@ syscall(struct trapframe *tf)
 		break;
 
 	    /* Add stuff here */
+	    case SYS__exit:
+	        _exit((int)tf->tf_a0);
+		break;
+
+            case SYS_write:
+                err = write((int)tf->tf_a0,
+			    (userptr_t)tf->tf_a1,
+			    (size_t)tf->tf_a2);
+	        break;
 
 	    default:
 		kprintf("Unknown syscall %d\n", callno);

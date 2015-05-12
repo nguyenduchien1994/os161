@@ -27,6 +27,9 @@
  * SUCH DAMAGE.
  */
 
+#include <types.h>
+#include <synch.h>
+
 #ifndef _TEST_H_
 #define _TEST_H_
 
@@ -82,6 +85,10 @@ int runprogram(char *progname);
 
 /* Kernel menu system. */
 void menu(char *argstr);
+
+/* only for preliminary testing */
+struct lock *menu_lock;
+struct cv *menu_cv;
 
 /* The main function, called from start.S. */
 void kmain(char *bootstring);

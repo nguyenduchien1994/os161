@@ -50,7 +50,7 @@
 #include <addrspace.h>
 #include <mainbus.h>
 #include <vnode.h>
-
+#include <test.h>
 
 /* Magic number used as a guard value on kernel thread stacks. */
 #define THREAD_STACK_MAGIC 0xbaadf00d
@@ -776,6 +776,10 @@ thread_startup(void (*entrypoint)(void *data1, unsigned long data2),
 void
 thread_exit(void)
 {
+  lock_acquire(menu_lock);
+  cv_signal(menu_cv, menu_lock);
+  lock_release(menu_lock);
+
 	struct thread *cur;
 
 	cur = curthread;

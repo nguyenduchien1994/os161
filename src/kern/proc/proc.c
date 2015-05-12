@@ -48,6 +48,7 @@
 #include <current.h>
 #include <addrspace.h>
 #include <vnode.h>
+#include <linkedlist.h>
 
 /*
  * The process for the kernel; this holds all the kernel-only threads.
@@ -81,6 +82,29 @@ proc_create(const char *name)
 
 	/* VFS fields */
 	proc->p_cwd = NULL;
+	
+	/*
+	// To fix with global manager
+	proc->pid = 0;
+	proc->context = NULL;
+	proc->parent = NULL;
+
+	// Complete
+	proc->program_counter = 0;
+	proc->cur_state = new;
+
+	proc->open_files =linkedlist_create();
+	if(proc->open_files == NULL){
+	  kfree(proc->p_name);
+	  kfree(proc);
+	}
+
+	proc->children = linkedlist_create();
+	if(proc->children == NULL){
+	  kfree(proc->open_files);
+	  kfree(proc->p_name);
+	  kfree(proc);
+	}*/
 
 	return proc;
 }
@@ -164,6 +188,11 @@ proc_destroy(struct proc *proc)
 		}
 		as_destroy(as);
 	}
+
+	/*
+	linkedlist_destroy(proc->file_list);
+	linkedlist_destroy(proc->proc_list);
+	*/
 
 	threadarray_cleanup(&proc->p_threads);
 	spinlock_cleanup(&proc->p_lock);

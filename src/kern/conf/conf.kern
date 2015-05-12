@@ -465,3 +465,4 @@ optfile net	test/nettest.c
 ########################################
 
 file syscall/exit.c
+file syscall/write.c

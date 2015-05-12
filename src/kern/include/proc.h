@@ -38,26 +38,54 @@
 
 #include <spinlock.h>
 #include <thread.h> /* required for struct threadarray */
+#include <synch.h>
 
 struct addrspace;
 struct vnode;
 
+typedef int pc_t;
+
+typedef enum state{
+              running,
+	      ready,
+	      waiting,
+	      new,
+	      dead
+} state;
+
+/*
+ * Represents a file opened by process
+ * File descriptor represented by index(key) in file_list
+ */
+typedef struct open_file{
+                          struct vnode *vfile;
+                          struct lock *file_lk;
+} open_file;
+
 /*
  * Process structure.
  */
-struct proc {
-	char *p_name;			/* Name of this process */
-	struct spinlock p_lock;		/* Lock for this structure */
-	struct threadarray p_threads;	/* Threads in this process */
-
-	/* VM */
-	struct addrspace *p_addrspace;	/* virtual address space */
-
-	/* VFS */
-	struct vnode *p_cwd;		/* current working directory */
-
-	/* add more material here as needed */
-};
+typedef struct proc {
+  char *p_name;			/* Name of this process */
+  struct spinlock p_lock;		/* Lock for this structure */
+  struct threadarray p_threads;	/* Threads in this process */
+  
+  /* VM */
+  struct addrspace *p_addrspace;	/* virtual address space */
+  
+  /* VFS */
+  struct vnode *p_cwd;		/* current working directory */
+  
+  /*
+  pid_t pid;
+  pc_t program_counter;
+  state cur_state;
+  struct trap_frame *context;
+  Linked_List *open_files;
+  struct proc *parent;
+  Linked_List *children;
+  */
+} proc;
 
 /* This is the process structure for the kernel and for kernel-only threads. */
 extern struct proc *kproc;

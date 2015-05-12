@@ -45,6 +45,7 @@
 #include "opt-net.h"
 #include "opt-concurrent_list.h"
 #include "opt-shared_buffer.h"
+#include <synch.h>
 
 /*
  * In-kernel menu and command dispatcher.
@@ -157,7 +158,14 @@ cmd_prog(int nargs, char **args)
 	args++;
 	nargs--;
 
-	return common_prog(nargs, args);
+	int ret = common_prog(nargs, args);
+
+	
+        lock_acquire(menu_lock);
+        cv_wait(menu_cv, menu_lock);
+        lock_release(menu_lock);
+
+	return ret;
 }
 
 /*
@@ -709,6 +717,9 @@ void
 menu(char *args)
 {
 	char buf[64];
+	
+	menu_lock = lock_create("menu");
+	menu_cv = cv_create("menu");
 
 	menu_execute(args, 1);
 
