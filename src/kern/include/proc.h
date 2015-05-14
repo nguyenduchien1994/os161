@@ -39,6 +39,7 @@
 #include <spinlock.h>
 #include <thread.h> /* required for struct threadarray */
 #include <synch.h>
+#include <linkedlist.h>
 
 struct addrspace;
 struct vnode;
@@ -76,7 +77,7 @@ typedef struct proc {
   /* VFS */
   struct vnode *p_cwd;		/* current working directory */
   
-  /*
+  
   pid_t pid;
   pc_t program_counter;
   state cur_state;
@@ -84,8 +85,84 @@ typedef struct proc {
   Linked_List *open_files;
   struct proc *parent;
   Linked_List *children;
-  */
+  
 } proc;
+
+/*
+ * Process API
+ *
+ * set_state
+ *     Sets the given process' state to the given state.
+ * 
+ * 
+ */
+
+
+/*
+ * Global manager to handle all user processes. Maps user process to kernel thread
+ *
+ */
+#define MAX_PROCESSES = 256
+
+typedef struct proc_mngr{
+  proc **usr_procs;//256 array
+  struct thread **threads;//256 array
+  multi_queue *ready_queue;
+  stack *free_ids;
+  struct lock *p_lk;
+} proc_mngr;
+
+/*
+ * Global manager API
+ * All functions assume given manager and processes and threads are not NULL
+ *
+ * proc_mngr_add 
+ *      inserts the new process into the manager, mapping it to the given thread.
+ *      Assumes: thread and process not already in manager. 
+ *      Returns: 0 if not added (no space), 1 otherwise
+ * 
+ * proc_mngr_remove
+ *      removes the given process from the manager and deallocates it.
+ *      Assumes: process is "dead," thread and process are in manager
+ * 
+ * proc_mngr_get_thread
+ *      Gets the thread associated with the given process.
+ *      Assumes: process and thread in manager
+ *      Returns: proper kernel thread
+ * 
+ * proc_mngr_get_proc
+ *      Gets the user process associated with the given thread.
+ *      Assumes: process and thread in manager
+ *      Returns: proper user process
+ * 
+ * proc_mngr_get_lock
+ *      Gets the global lock used for all processes (on run)
+ *      Returns: the global lock
+ * 
+ * proc_mngr_make_ready
+ *      Makes the given proc ready and queues for run.
+ *      Assumes: proc is not already ready or dead
+ *
+ * proc_mngr_make_wait
+ *      Makes the given process state "waiting," not in queue
+ *      Assumes: current process is "running,"
+ *      
+ * 
+ */
+
+proc_mngr* proc_mngr_create(void);
+void proc_mngr_destroy(proc_mngr *ptr);
+
+int proc_mngr_add(proc_mngr *this, proc *p, struct thread *t);
+void proc_mngr_remove(proc_mngr *this, proc *p);
+
+struct thread* proc_mngr_get_thread(proc_mngr *this, proc *p);
+proc* proc_mngr_get_proc(proc_mngr *this, struct thread *t);
+void proc_mngr_get_lock(proc_mngr *this);
+
+void proc_mngr_make_ready(proc_mngr *this, proc *p);
+void proc_mngr_make_wait(proc_mngr *this, proc *p);
+
 
 /* This is the process structure for the kernel and for kernel-only threads. */
 extern struct proc *kproc;

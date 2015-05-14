@@ -23,6 +23,7 @@ struct Linked_List {
 };
 
 Linked_List *linkedlist_create(void);
+void linkedlist_destroy(Linked_List *list);
 
 Linked_List_Node *linkedlist_create_node(int key, void *data);
 
@@ -59,5 +60,40 @@ void
  */
 void *
 linkedlist_remove_head(Linked_List *list, int *key);
+
+typedef Linked_List stack;
+
+stack* stack_create(void);
+void stack_destroy(stack *s);
+void stack_push(stack *s, void *data);
+void* stack_pop(stack *s);//NULL if empty
+
+typedef Linked_List queue;
+
+queue* queue_create(void);
+void queue_destroy(queue *q);
+void queue_add(queue *q, void *data);
+void* queue_remove(queue *q);//NULL if empty
+
+typedef struct multi_queue{
+  queue **queues;
+  int *priorities;//same size as queue array, should all be positive and distinct
+  int *counters;
+  int num_queues;
+} multi_queue;
+
+
+/*
+ * multi_queue_add
+ *      Adds the data to the queue in the multiqueue specified by which
+ * 
+ * multi_queue_remove
+ *      Remove data from the multi_queue. Pulled from queues by frequency. For each queue, if priority % counter == 0, pull from queue, increment counters (if non-zero or return counter) and return. Else increment counters and try again.
+ */
+
+multi_queue* multi_queue_create(queue** queues, int * priorities, int size);
+void multi_queue_destroy(multi_queue *mq);
+void multi_queue_add(multi_queue *mq, void *data, int which);
+void* multi_queue_remove(multi_queue *mq);//NULL if empty
 
 #endif

@@ -83,7 +83,7 @@ proc_create(const char *name)
 	/* VFS fields */
 	proc->p_cwd = NULL;
 	
-	/*
+	
 	// To fix with global manager
 	proc->pid = 0;
 	proc->context = NULL;
@@ -104,7 +104,7 @@ proc_create(const char *name)
 	  kfree(proc->open_files);
 	  kfree(proc->p_name);
 	  kfree(proc);
-	}*/
+	}
 
 	return proc;
 }
@@ -189,10 +189,10 @@ proc_destroy(struct proc *proc)
 		as_destroy(as);
 	}
 
-	/*
-	linkedlist_destroy(proc->file_list);
-	linkedlist_destroy(proc->proc_list);
-	*/
+	
+	linkedlist_destroy(proc->open_files);
+	linkedlist_destroy(proc->children);
+	
 
 	threadarray_cleanup(&proc->p_threads);
 	spinlock_cleanup(&proc->p_lock);

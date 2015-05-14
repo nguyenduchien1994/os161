@@ -12,9 +12,21 @@ Linked_List *linkedlist_create(void)
     ptr -> first = NULL;
     ptr -> last = NULL;
     ptr -> lk = lock_create("Linked_List lock");
+    if(ptr -> lk == NULL){
+      kfree(ptr);
+      return NULL;
+    }
 
     return ptr;
 }
+void linkedlist_destroy(Linked_List *list)
+{
+  KASSERT(list != NULL);
+
+  kfree(list -> lk);
+  kfree(list);
+}
+
 
 Linked_List_Node *linkedlist_create_node(int key, void *data)
 {

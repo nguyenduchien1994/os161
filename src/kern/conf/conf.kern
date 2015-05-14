@@ -331,6 +331,7 @@ file      thread/threadlist.c
 #
 
 file      proc/proc.c
+file	  proc/mngr.c
 
 #
 # Virtual memory system
@@ -376,6 +377,8 @@ file      vfs/devnull.c
 file      syscall/loadelf.c
 file      syscall/runprogram.c
 file      syscall/time_syscalls.c
+file	  syscall/write.c
+file	  syscall/exit.c
 
 #
 # Startup and initialization
@@ -430,6 +433,9 @@ defoption netfs
 defoption concurrent_list
 optfile   concurrent_list  concurrentlist/linkedlist.c
 optfile   concurrent_list  concurrentlist/linkedlisttest.c
+optfile   concurrent_list  concurrentlist/stack.c
+optfile   concurrent_list  concurrentlist/queue.c
+optfile   concurrent_list  concurrentlist/multi_queue.c
 
 ######################################
 #                                    #
@@ -456,13 +462,3 @@ file		test/synchtest.c
 file		test/kmalloctest.c
 file		test/fstest.c
 optfile net	test/nettest.c
-
-
-########################################
-#                                      #
-#              Syscalls                #
-#                                      #
-########################################
-
-file syscall/exit.c
-file syscall/write.c
