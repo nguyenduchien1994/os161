@@ -94,8 +94,13 @@ typedef struct proc {
  * set_state
  *     Sets the given process' state to the given state.
  * 
- * 
+ * set_p_cwd
+ *     Sets the given process' current working directory to the given directory 
  */
+
+void set_state(proc *p, state s);
+
+void set_p_cwd(proc *p, struct vnode *new);
 
 
 /*

@@ -359,3 +359,9 @@ proc_setas(struct addrspace *newas)
 	return oldas;
 }
 
+void set_p_cwd(proc * p, struct vnode * new)
+{
+  vnode_decref(p->p_cwd);
+  p->p_cwd = new;
+  vnode_incref(new);
+}

@@ -115,6 +115,10 @@ syscall(struct trapframe *tf)
     _exit((int)tf->tf_a0);
     break;
     
+  case SYS_chdir:
+    err = chdir((const char*)tf->tf_a0);
+    break;
+
   case SYS_close:
     err = close((int)tf->tf_a0);
 
@@ -133,6 +137,10 @@ syscall(struct trapframe *tf)
   case SYS___getcwd:
     err = __getcwd((char*)tf->tf_a0,
 		   (size_t)tf->tf_a1);
+    break;
+
+  case SYS_getpid:
+    err = getpid();
     break;
 
   case SYS_lseek:
