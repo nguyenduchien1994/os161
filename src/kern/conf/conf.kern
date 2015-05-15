@@ -379,6 +379,7 @@ file      syscall/runprogram.c
 file      syscall/time_syscalls.c
 file	  syscall/write.c
 file	  syscall/exit.c
+file	  syscall/getcwd.c
 
 #
 # Startup and initialization

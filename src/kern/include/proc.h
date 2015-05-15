@@ -112,6 +112,10 @@ typedef struct proc_mngr{
   struct lock *p_lk;
 } proc_mngr;
 
+proc_mngr *glbl_mngr;
+
+struct spinlock syscall_lock;
+
 /*
  * Global manager API
  * All functions assume given manager and processes and threads are not NULL
