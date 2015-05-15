@@ -77,8 +77,9 @@ void* queue_remove(queue *q);//NULL if empty
 
 typedef struct multi_queue{
   queue **queues;
-  int *priorities;//same size as queue array, should all be positive and distinct
-  int *counters;
+  int *turns;//same size as queue array, should all be positive and distinct
+  int which;//which queue to pull from
+  int count;//how many times we have pulled from current queue
   int num_queues;
 } multi_queue;
 
@@ -91,7 +92,7 @@ typedef struct multi_queue{
  *      Remove data from the multi_queue. Pulled from queues by frequency. For each queue, if priority % counter == 0, pull from queue, increment counters (if non-zero or return counter) and return. Else increment counters and try again.
  */
 
-multi_queue* multi_queue_create(queue** queues, int * priorities, int size);
+multi_queue* multi_queue_create(int * turns, int size);
 void multi_queue_destroy(multi_queue *mq);
 void multi_queue_add(multi_queue *mq, void *data, int which);
 void* multi_queue_remove(multi_queue *mq);//NULL if empty
