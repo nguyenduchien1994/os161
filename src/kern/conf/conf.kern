@@ -380,6 +380,14 @@ file      syscall/time_syscalls.c
 file	  syscall/write.c
 file	  syscall/exit.c
 file	  syscall/getcwd.c
+file	  syscall/close.c
+file	  syscall/dup2.c
+file	  syscall/execv.c
+file	  syscall/lseek.c
+file	  syscall/open.c
+file	  syscall/read.c
+file	  syscall/waitpid.c
+
 
 #
 # Startup and initialization
