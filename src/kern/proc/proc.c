@@ -93,7 +93,7 @@ proc_create(const char *name)
 	proc->program_counter = 0;
 	proc->cur_state = new;
 
-	proc->open_files = linkedlist_create();
+	proc->open_files = file_list_create();
 	if(proc->open_files == NULL){
 	  kfree(proc->p_name);
 	  kfree(proc);
@@ -190,7 +190,7 @@ proc_destroy(struct proc *proc)
 	}
 
 	
-	linkedlist_destroy(proc->open_files);
+	file_list_destroy(proc->open_files);
 	linkedlist_destroy(proc->children);
 	
 

@@ -116,60 +116,94 @@ syscall(struct trapframe *tf)
     break;
     
   case SYS_chdir:
-    err = chdir((const char*)tf->tf_a0);
+    retval = chdir((const char*)tf->tf_a0);
+    if(retval < 0){
+      err = 0-retval;
+    }
     break;
 
   case SYS_close:
-    err = close((int)tf->tf_a0);
+    retval = close((int)tf->tf_a0);
+    if(retval < 0){
+      err = 0-retval;
+    }
+    break;
 
   case SYS_dup2:
-    err = dup2((int)tf->tf_a0,
+    retval = dup2((int)tf->tf_a0,
 	       (int)tf->tf_a1);
+    if(retval < 0){
+      err = 0-retval;
+    }
     break;
     
   case SYS_execv:
-    err = execv((const char*)tf->tf_a0,
+    retval = execv((const char*)tf->tf_a0,
 		(char **)tf->tf_a1);
+    if(retval < 0){
+      err = 0-retval;
+    }
     break;
 
     //fork?
 
   case SYS___getcwd:
-    err = __getcwd((char*)tf->tf_a0,
+    retval = __getcwd((char*)tf->tf_a0,
 		   (size_t)tf->tf_a1);
+    if(retval < 0){
+      err = 0-retval;
+    }
     break;
 
   case SYS_getpid:
-    err = getpid();
+    retval = getpid();
+    if(retval < 0){
+      err = 0-retval;
+    }
     break;
 
   case SYS_lseek:
     retval = lseek((int)tf->tf_a0,
 		   (off_t)tf->tf_a1,
 		   (int)tf->tf_a2);
+    if(retval == -1){
+      err = 0-retval;
+    }
     break;
 
   case SYS_open:
-    err = open((const char*)tf->tf_a0,
+    retval = open((const char*)tf->tf_a0,
 	       (int)tf->tf_a1);
+    if(retval < 0){
+      err = 0-retval;
+    }
     break;
 
   case SYS_read:
     retval = read((int)tf->tf_a0,
 		  (void*)tf->tf_a1,
 		  (size_t)tf->tf_a2);
+    if(retval < 0){
+      err = 0-retval;
+    }
     break;
     
   case SYS_waitpid:
     retval = waitpid((pid_t)tf->tf_a0,
 		     (int *)tf->tf_a1,
 		     (int)tf->tf_a2);
+    if(retval < 0){
+      err = 0-retval;
+    }
     break;
 
   case SYS_write:
     err = write((int)tf->tf_a0,
 		(userptr_t)tf->tf_a1,
 		(size_t)tf->tf_a2);
+    if(retval < 0){
+      err = 0-retval;
+    }
     break;
 
   default:

@@ -40,6 +40,7 @@
 #include <thread.h> /* required for struct threadarray */
 #include <synch.h>
 #include <linkedlist.h>
+#include <usr_file.h>
 
 struct addrspace;
 struct vnode;
@@ -53,15 +54,6 @@ typedef enum state{
 	      new,
 	      dead
 } state;
-
-/*
- * Represents a file opened by process
- * File descriptor represented by index(key) in file_list
- */
-typedef struct open_file{
-                          struct vnode *vfile;
-                          struct lock *file_lk;
-} open_file;
 
 /*
  * Process structure.
@@ -82,7 +74,7 @@ typedef struct proc {
   pc_t program_counter;
   state cur_state;
   struct trap_frame *context;
-  Linked_List *open_files;
+  file_list *open_files;
   struct proc *parent;
   Linked_List *children;
   
