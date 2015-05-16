@@ -92,6 +92,21 @@ int file_list_add(file_list *fl, open_file *of)
   return ret;
 }
 
+int file_list_insert(file_list *fl, open_file *of, int fd)
+{
+  KASSERT(fl != NULL);
+  (void)of;
+
+  if (fd < 0 || fd > INT_MAX)
+  {
+    return -1;
+  } 
+  else
+  {
+    return 0;
+  }
+}
+
 static Linked_List_Node *file_list_get_node(file_list *fl, int fd)
 {
   KASSERT(fl != NULL);
