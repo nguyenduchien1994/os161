@@ -65,6 +65,9 @@
 /* Max bytes for an exec function (should be at least 16K) */
 #define __ARG_MAX       (64 * 1024)
 
+/* Maximum integer*/
+#define __INT_MAX       32767 
+
 
 /*
  * Important for system behavior, but not a big part of the API.

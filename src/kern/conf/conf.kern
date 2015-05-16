@@ -332,6 +332,7 @@ file      thread/threadlist.c
 
 file      proc/proc.c
 file	  proc/mngr.c
+file	  proc/usr_file.c
 
 #
 # Virtual memory system
