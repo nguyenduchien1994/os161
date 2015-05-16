@@ -61,6 +61,14 @@ void
 void *
 linkedlist_remove_head(Linked_List *list, int *key);
 
+/*
+ * Remove a node from a specified key from the list.
+ * The removed item is returned.
+ *
+ */
+void *
+linkedlist_remove(Linked_List *list, int key);
+
 typedef Linked_List stack;
 
 stack* stack_create(void);

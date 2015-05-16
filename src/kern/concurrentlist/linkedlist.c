@@ -4,6 +4,7 @@
 #include <test.h>
 #include <array.h>
 #include <synch.h>
+#include <limits.h>
 
 Linked_List *linkedlist_create(void)
 {
@@ -48,7 +49,7 @@ void linkedlist_prepend(Linked_List *list, void *data)
 		Linked_List_Node * f = list -> first;
 		
 		if (list -> first == NULL) {
-			newnode = linkedlist_create_node(0, data);
+			newnode = linkedlist_create_node(INT_MAX, data);
 			list -> first = newnode;
 			list -> last = newnode;
 		} else {
@@ -179,3 +180,50 @@ void * linkedlist_remove_head(Linked_List *list, int *key) {
   return data;
 
 }
+
+void * linkedlist_remove(Linked_List *list, int key){
+
+  void * data = NULL;
+  KASSERT(key > 0);
+
+  if(list != NULL)
+    {
+      lock_acquire(list -> lk);
+      
+      if (list -> first != NULL)
+	{
+	  Linked_List_Node * node = list -> first;
+	  if (key == node->key)
+	    {
+	      int * temp = kmalloc(sizeof(int));
+	      data = linkedlist_remove_head(list,temp);
+	    }
+	  else
+	    {
+	      while(key < node->key)
+		{
+		  node = node->next;
+		}
+	      if (node -> next == NULL)
+		{
+		  list -> last = node -> prev;
+		  list -> last -> next = NULL;
+		  data = node -> data;
+		  kfree(node);
+		}
+	      else 
+		{
+		  node -> prev -> next = node -> next;
+		  node -> next -> prev = node -> prev;
+		  data = node -> data;
+		  kfree(node);
+		}
+	      list -> length--;
+	    }
+	}
+      lock_release(list -> lk);
+    }
+
+  return data;
+}
+
