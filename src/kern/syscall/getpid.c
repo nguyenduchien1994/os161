@@ -1,22 +1,24 @@
 #include <types.h>
+#include <spl.h>
 #include <syscall.h>
 #include <proc.h>
 #include <current.h>
 
 int getpid(pid_t *ret)
 {
-  (void)ret;
-  // spinlock_acquire(
-  
+  // spinlock_acquire(&syscall_lock);
+  splhigh();
   KASSERT(curthread != NULL);
   
   /*get proc from global manager */
-  proc * userproc = proc_mngr_get_proc(glbl_mngr, curthread); 
+  // proc * userproc = proc_mngr_get_proc(glbl_mngr, curthread); 
   
-  KASSERT(userproc != NULL);
-  KASSERT(userproc->cur_state == running);
+  KASSERT(curproc != NULL);
+  KASSERT(curproc->cur_state == running);
   
-  pid_t pid = userproc->pid;
-
-  return pid;
+  pid_t pid = curproc->pid;
+  
+  *ret = pid;
+  // spinlock_release(&syscall_lock);
+  spl0();
 }

@@ -4,7 +4,7 @@
 #include <linkedlist.h>
 #include <vnode.h>
 #include <synch.h>
-
+#include <limits.h>
 
 open_file* open_file_create(struct vnode *file, off_t init_offset)
 {
@@ -54,6 +54,10 @@ file_list* file_list_create(void)
     kfree(ret->files);
     return NULL;
   }
+  linkedlist_append(ret->files,NULL);
+  linkedlist_append(ret->files,NULL);
+  linkedlist_append(ret->files,NULL);
+
   return ret;
 }
 
@@ -65,14 +69,100 @@ void file_list_destroy(file_list *fl)
   kfree(fl);
 }
 /*
- * insert into linked list at (if stack empty, list->first-1, else pop stack)
+ * insert into linked list at (if stack empty, last, else pop stack)
  * stack available is unsigned integers representing available keys
+ * The return value is the most recent file handle created
  */
 int file_list_add(file_list *fl, open_file *of)
 {
-  (void)of;
-  (void)fl;
-  return 0;
+  KASSERT(fl != NULL);
+
+  int ret;
+  if (fl -> available -> first == NULL)
+  {
+    linkedlist_append(fl -> files, of);
+    ret = fl -> files -> last -> key;
+  }
+  else
+  {
+    ret =  *( (int*) stack_pop(fl -> available) );
+    linkedlist_insert(fl -> files, ret, of);
+  }
+  
+  return ret;
+}
+
+static Linked_List_Node *file_list_get_node(file_list *fl, int fd)
+{
+  KASSERT(fl != NULL);
+
+  if (fd < 0 || fd > INT_MAX)
+  {
+    return NULL;
+  }
+  else
+  {
+    Linked_List_Node *node = fl -> files -> first;
+    while(node != NULL && fd < node -> key)
+    {
+      node = node -> next;
+    }
+    if (node -> key != fd)
+    {
+      return NULL;
+    }
+    else
+    {
+      return node;
+    }
+  }
+}
+
+/*
+ * 0,1,2,6
+ * Insert into linked list using given filehandle (overwriting if need be).
+ * Get copy of pointer to open file then:
+ * Case 1: fd > list->last->key (max fd). file_list_add a copy of open_file pointer, change list->last->key to fd, add x to stack for oldkey < x < fd
+ * Case 2: fd < list->last->key and fd not used. Search through stack and remove, insert to list as desired
+ * Case 3: '' and fd used. Close file at fd (so now fd on top of stack) and then file_list_add the copy of the pointer
+ */
+int file_list_insert(file_list *fl, open_file *of, int fd)
+{
+  KASSERT(fl != NULL);
+
+  if (fd < 0 || fd > INT_MAX)
+  {
+    return -1;
+  } 
+  else
+  {
+    int curfd = fl -> files -> last -> key;
+    if (fd > curfd)
+    {
+      linkedlist_insert(fl -> files, fd, of);
+      for (int i=curfd; i<fd; i++)
+      {
+	int *to_push = kmalloc(sizeof(int));
+	*to_push = i;
+	stack_push(fl->available, to_push);
+      }
+    }
+    else
+    {
+      Linked_List_Node *node = file_list_get_node(fl,fd);
+      if (node == NULL)
+      {
+	linkedlist_insert(fl -> files, fd, of);
+	//how to remove fd from stack ?
+      }
+      else
+      {
+	linkedlist_remove(fl -> files, fd);
+	linkedlist_insert(fl -> files, fd, of);
+      }
+    }
+    return 0;
+  }
 }
 
 /*
@@ -80,16 +170,37 @@ int file_list_add(file_list *fl, open_file *of)
  */
 open_file *file_list_get(file_list *fl, int fd)
 {
-  (void)fd;
-  (void)fl;
-  return NULL;
+  Linked_List_Node *node = file_list_get_node(fl,fd);
+  if (node == NULL)
+  {
+    return NULL;
+  }
+  else
+  {
+    return node -> data;
+  }
 }
+
 /*
  * add key to available stack, remove from list, and return
  */
 open_file *file_list_remove(file_list *fl, int fd)
 {
-  (void)fd;
-  (void)fl;
-  return NULL;
+  Linked_List_Node *in_list = file_list_get_node(fl,fd);
+
+  if (in_list == NULL)
+  {
+    //don't change stack
+    return NULL;
+  }
+  else
+  {
+    //change stack
+    open_file *ret = linkedlist_remove(fl -> files, fd);
+    
+    int *to_push = kmalloc(sizeof(int));
+    *to_push = fd;
+    stack_push(fl -> available, to_push);
+    return ret;
+  }
 }

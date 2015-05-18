@@ -228,3 +228,29 @@ void * linkedlist_remove(Linked_List *list, int key){
   return data;
 }
 
+
+void linkedlist_append(Linked_List *list, void *data)
+{
+	if (list != NULL) {
+		lock_acquire(list -> lk);
+
+		Linked_List_Node * newnode;
+		Linked_List_Node * f = list -> last;
+		
+		if (list -> last == NULL) {
+			newnode = linkedlist_create_node(0, data);
+			list -> last = newnode;
+			list -> first = newnode;
+		} else {
+			newnode = linkedlist_create_node(f -> key + 1, data);
+			
+			newnode -> prev = list -> last;
+			f -> next = newnode;
+			list -> last = newnode;
+		}
+		
+		list -> length ++;
+		
+		lock_release(list -> lk);
+	}
+}

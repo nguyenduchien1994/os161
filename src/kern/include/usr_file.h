@@ -34,6 +34,7 @@ typedef
 file_list* file_list_create(void);
 void file_list_destroy(file_list *fl);//assumes empty
 int file_list_add(file_list *fl, open_file *of);//return handle
+int file_list_insert(file_list *fl, open_file *of, int fd); 
 open_file *file_list_get(file_list *fl, int fd);
 open_file *file_list_remove(file_list *fl, int fd);
 

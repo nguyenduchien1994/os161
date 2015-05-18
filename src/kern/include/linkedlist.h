@@ -69,6 +69,9 @@ linkedlist_remove_head(Linked_List *list, int *key);
 void *
 linkedlist_remove(Linked_List *list, int key);
 
+void 
+linkedlist_append(Linked_List *list, void *data);
+
 typedef Linked_List stack;
 
 stack* stack_create(void);
