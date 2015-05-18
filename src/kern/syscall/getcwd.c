@@ -7,8 +7,9 @@
 #include <kern/iovec.h>
 #include <proc.h>
 
-int __getcwd(char *buf, size_t buflen)
+int __getcwd(char *buf, size_t buflen, int *ret)
 {
+  (void)ret;
   //splhigh();
   struct iovec *db = kmalloc(sizeof(struct iovec));
   if(db == NULL){

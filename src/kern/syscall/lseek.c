@@ -7,8 +7,9 @@
 #include <vfs.h>
 #include <stat.h>
 
-off_t lseek(int fd, off_t pos, int whence)
+int lseek(int fd, off_t pos, int whence, off_t *ret)
 {
+  (void)ret;
   //splhigh();
   open_file *f = file_list_get(curproc->open_files,fd);
   if(f == NULL){

@@ -42,20 +42,21 @@ void syscall(struct trapframe *tf);
 
 /*
  * Support functions.
+ * All functions that return, return the error code if an error occurred. The return value is passed through the ret pointer.
  */
 void _exit(int exitcode);
 int open(const char *filename, int flags);
-ssize_t read(int fd, void *buf, size_t buflen);
-ssize_t write(int fd, const void *buf, size_t nbytes);
-off_t lseek(int fd, off_t pos, int whence);
+int read(int fd, void *buf, size_t buflen, ssize_t *ret);
+int write(int fd, const void *buf, size_t nbytes, ssize_t *ret);
+int lseek(int fd, off_t pos, int whence, off_t *ret);
 int close(int fd);
-int dup2(int oldfd, int newfd);
+int dup2(int oldfd, int newfd, int *ret);
 int chdir(const char *pathname);
-int __getcwd(char *buf, size_t buflen);
-pid_t getpid(void);
-pid_t fork(void);
+int __getcwd(char *buf, size_t buflen, int *ret);
+int getpid(pid_t *ret);
+int fork(pid_t *pret, pid_t *cret);//two returns for parent and child
 int execv(const char *program, char **args);
-pid_t waitpid(pid_t pid, int *status, int options);
+int waitpid(pid_t pid, int *status, int options, pid_t *ret);
 
 /* Helper for fork(). You write this. */
 void enter_forked_process(struct trapframe *tf);

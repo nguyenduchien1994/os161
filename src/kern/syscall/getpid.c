@@ -3,8 +3,9 @@
 #include <proc.h>
 #include <current.h>
 
-pid_t getpid(void)
+int getpid(pid_t *ret)
 {
+  (void)ret;
   // spinlock_acquire(
   
   KASSERT(curthread != NULL);

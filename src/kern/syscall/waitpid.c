@@ -1,10 +1,11 @@
 #include <types.h>
 #include <syscall.h>
 
-pid_t waitpid(pid_t pid, int *status, int options)
+int waitpid(pid_t pid, int *status, int options, pid_t *ret)
 {
   (void)pid;
   (void)status;
   (void)options;
+  *ret = pid;
   return 0;
 }
