@@ -26,6 +26,10 @@ int close(int fd, int *ret)
   }
   else
   {
+    if (to_close -> vfile == NULL)
+    {
+      return EBADF;
+    }
     vfs_close(to_close -> vfile);
     open_file_decref(to_close);
     
