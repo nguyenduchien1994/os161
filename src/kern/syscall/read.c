@@ -10,28 +10,40 @@
 #include <vnode.h>
 #include <kern/errno.h>
 #include <kern/fcntl.h>
+#include <limits.h>
 
 int read(int fd, void *buf, size_t buflen, ssize_t *ret)
 {
-  int err = 0;
+  if (fd < 0 || fd > INT_MAX)
+  {
+    return EBADF;
+  }
+
+  void *buf_space = kmalloc(sizeof(*buf)*buflen);
+  if (buf_space == NULL)
+  {
+    return EFAULT;
+  }
   
+  int err = 0;
   open_file *to_read = file_list_get(((proc*)curproc)->open_files,fd);
 
   if (to_read == NULL)
   {
-    err = EBADF;
+    return EBADF;
   }
   else
   {
     if (to_read->flags & O_WRONLY)
     {
-      err =  EBADF;
+       return EBADF;
     } 
     else
     {
       lock_acquire(to_read->file_lk);
       struct uio *read_uio = kmalloc(sizeof(struct uio));
       struct iovec iov;
+
       uio_kinit(&iov,read_uio,(void*)buf,buflen,to_read->offset,UIO_READ);
 
       read_uio->uio_segflg = UIO_USERSPACE;
@@ -47,6 +59,5 @@ int read(int fd, void *buf, size_t buflen, ssize_t *ret)
       lock_release(to_read->file_lk);
     }
   }
-
   return err;
 }

@@ -107,7 +107,7 @@ static Linked_List_Node *file_list_get_node(file_list *fl, int fd)
 {
   KASSERT(fl != NULL);
 
-  if (fd < 0 || fd > INT_MAX)
+  if (fd < 0 || fd > OPEN_MAX)
   {
     return NULL;
   }
@@ -118,7 +118,7 @@ static Linked_List_Node *file_list_get_node(file_list *fl, int fd)
     {
       node = node -> next;
     }
-    if (node -> key != fd)
+    if (node != NULL && node -> key != fd)
     {
       return NULL;
     }
@@ -141,7 +141,7 @@ int file_list_insert(file_list *fl, open_file *of, int fd)
 {
   KASSERT(fl != NULL);
 
-  if (fd < 0 || fd > INT_MAX)
+  if (fd < 0 || fd > OPEN_MAX)
   {
     return -1;
   } 
@@ -198,7 +198,7 @@ open_file *file_list_get(file_list *fl, int fd)
  */
 open_file *file_list_remove(file_list *fl, int fd)
 {
-  if (fd < 0 || fd > INT_MAX)
+  if (fd < 0 || fd > OPEN_MAX)
   {
     return NULL;
   }

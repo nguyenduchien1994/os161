@@ -49,7 +49,7 @@ void linkedlist_prepend(Linked_List *list, void *data)
 		Linked_List_Node * f = list -> first;
 		
 		if (list -> first == NULL) {
-			newnode = linkedlist_create_node(INT_MAX, data);
+			newnode = linkedlist_create_node(OPEN_MAX, data);
 			list -> first = newnode;
 			list -> last = newnode;
 		} else {
@@ -201,11 +201,11 @@ void * linkedlist_remove(Linked_List *list, int key){
       }
       else
       {
-	while(node != NULL && key < node->key)
+	while(node != NULL && key > node->key)
 	{
 	  node = node->next;
 	}
-	if(node != NULL)
+	if(node != NULL && node->key == key)
 	{
 	  if (node -> next == NULL)
 	  {
