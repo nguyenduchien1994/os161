@@ -1,11 +1,15 @@
 #include <types.h>
 #include <syscall.h>
+#include <synch.h>
 
 int waitpid(pid_t pid, int *status, int options, pid_t *ret)
 {
-  (void)pid;
-  (void)status;
-  (void)options;
-  *ret = pid;
+  if(pid != NULL)
+  {
+    lockacquire(exit_lock);
+    wait_count ++;
+
+  } 
+  
   return 0;
 }

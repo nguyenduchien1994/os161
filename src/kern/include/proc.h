@@ -78,6 +78,12 @@ typedef struct proc {
   struct proc *parent;
   Linked_List *children;
   
+  /* for waitpid and _exit */
+  int exit_status;
+  struct lock exit_lock;
+  struct cv exit_cv;
+  int wait_count;
+  
 } proc;
 
 /*
