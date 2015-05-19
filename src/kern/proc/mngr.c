@@ -42,6 +42,12 @@ proc* proc_mngr_get_proc(proc_mngr *this, struct thread *t)
   return NULL;
 }
 
+proc* proc_mngr_get_from_pid(proc_mngr *this, pid_t pid)
+{
+  (void)this;
+  (void)pid;
+  return NULL;}
+
 void proc_mngr_get_lock(proc_mngr *this)
 {
   (void)this;
