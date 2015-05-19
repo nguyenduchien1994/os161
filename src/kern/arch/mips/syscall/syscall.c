@@ -122,7 +122,7 @@ syscall(void *trapframe, unsigned long junk)
     break;
 
   case SYS_close:
-    retval = close((int)tf->tf_a0,
+    err = close((int)tf->tf_a0,
 		   &retval);
     break;
 

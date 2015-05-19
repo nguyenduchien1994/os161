@@ -203,12 +203,12 @@ open_file *file_list_remove(file_list *fl, int fd)
     return NULL;
   }
   else
-  {      //change stack
-      open_file *ret = linkedlist_remove(fl -> files, fd);
-      
-      int *to_push = kmalloc(sizeof(int));
-      *to_push = fd;
-      stack_push(fl -> available, to_push);
-      return ret;
+  {      
+    open_file *ret = linkedlist_remove(fl -> files, fd);
+    
+    int *to_push = kmalloc(sizeof(int));
+    *to_push = fd;
+    stack_push(fl -> available, to_push);
+    return ret;
   }
 }
