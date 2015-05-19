@@ -7,26 +7,24 @@
 #include <proc.h>
 #include <current.h>
 #include <kern/fcntl.h>
+#include <kern/errno.h>
+#include <vnode.h>
 
 int open(const char *filename, int flags)
 {
+  
+  
+   void* namedest = kmalloc(sizeof(filename));
+   int err = copyin((const_userptr_t)filename, namedest, sizeof(filename));
 
-  //spinlock_acquire(&syscall_lock);
-  splhigh();
-  void* namedest = kmalloc(sizeof(filename));
-  int err = copyin((const_userptr_t)filename, namedest, sizeof(filename));
+   if (err != 0)
+   {
+      return EIO;
+   }
 
-  if (err != 0)
-    {
-      spl0();
-      return -1;
-      // spinlock_release(&syscall_lock);
-      //return EIO;
-    }
-
-  struct vnode *file;
-  struct vnode **ret = &file;
-
+   struct vnode *file = kmalloc(sizeof(struct vnode));
+   struct vnode **ret = &file;
+  
    
   mode_t mode;
 
@@ -48,26 +46,17 @@ int open(const char *filename, int flags)
       //return error?
     }
 
-  int toReturn = vfs_open(namedest, flags, mode, ret); 
+    err = vfs_open(namedest, flags, mode, ret); 
   
-  if (toReturn != 0)
+    if (err)
     {
-      spl0();
-      return -1;
+      return err;
     }
 
-  off_t off = 0;
-  open_file *openfile = open_file_create(file, off); 
+    open_file *openfile = open_file_create(file, 0, flags); 
   
-  err = file_list_add(curproc->open_files, openfile);
+    err = file_list_add(curproc->open_files, openfile);
 
-  if (err != 0)
-    {
-      spl0();
-      return -1;
-    }
-
-  //spinlock_release(&syscall_lock);
-  spl0();
-  return toReturn;
+    return err;
+  
 }

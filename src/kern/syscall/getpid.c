@@ -7,7 +7,7 @@
 int getpid(pid_t *ret)
 {
   // spinlock_acquire(&syscall_lock);
-  splhigh();
+  // splhigh();
   KASSERT(curthread != NULL);
   
   /*get proc from global manager */
@@ -20,6 +20,6 @@ int getpid(pid_t *ret)
   
   *ret = pid;
   // spinlock_release(&syscall_lock);
-  spl0();
+  //spl0();
   return 0;
 }
