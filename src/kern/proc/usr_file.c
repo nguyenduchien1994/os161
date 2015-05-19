@@ -21,6 +21,7 @@ open_file* open_file_create(struct vnode *file, off_t init_offset)
   VOP_INCREF(file);
   ret->vfile = file;
   ret->offset = init_offset;
+  ret->refcount = 0;
   return ret;
 }
 
@@ -33,6 +34,19 @@ void open_file_destroy(open_file *of)
   kfree(of);
 }
 
+void open_file_incref(open_file *of){
+  KASSERT(of != NULL);
+  of->refcount++;
+}
+
+void open_file_decref(open_file *of){
+  KASSERT(of != NULL);
+  of->refcount--;
+  
+  if(of->refcount <= 0){
+    open_file_destroy(of);
+  }
+}
 
 /**********************************************/
 
