@@ -1,11 +1,51 @@
 #include <types.h>
 #include <syscall.h>
+#include <proc.h>
+#include <uio.h>
+#include <lib.h>
+#include <copyinout.h>
+#include <current.h>
+#include <usr_file.h>
+#include <vfs.h>
+#include <vnode.h>
+#include <kern/errno.h>
+#include <kern/fcntl.h>
 
 int read(int fd, void *buf, size_t buflen, ssize_t *ret)
 {
-  (void)ret;
-  (void)fd;
-  (void)buf;
-  (void)buflen;
-  return 0;
+  int err = 0;
+  
+  open_file *to_read = file_list_get(((proc*)curproc)->open_files,fd);
+
+  if (to_read == NULL)
+  {
+    err = EBADF;
+  }
+  else
+  {
+    if (to_read->flag & O_WRONLY)
+    {
+      err =  EBADF;
+    } 
+    else
+    {
+      lock_acquire(to_read->file_lk);
+      struct uio *read_uio = kmalloc(sizeof(struct uio));
+      struct iovec iov;
+      uio_kinit(&iov,read_uio,(void*)buf,buflen,to_read->offset,UIO_READ);
+
+      read_uio->uio_segflg = UIO_USERSPACE;
+      read_uio->uio_resid = buflen;
+
+      while (!err && read_uio->uio_resid)
+      {
+	err = to_read->vfile->vn_ops->vop_read(to_read->vfile,read_uio);
+	*ret = buflen - read_uio->uio_resid;
+	to_read->offset = read_uio->uio_offset; 
+      }
+      lock_release(to_read->file_lk);
+    }
+  }
+
+  return err;
 }

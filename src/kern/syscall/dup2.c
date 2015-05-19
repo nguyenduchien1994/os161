@@ -13,14 +13,19 @@
 int dup2(int oldfd, int newfd, int *ret)
 {
   open_file *to_dup = file_list_get(curproc -> open_files, oldfd);
+  *ret = newfd;
 
   if (to_dup == NULL)
   {
-    return -1;
+    return EBADF;
   }
   else
   {
-    *ret = file_list_insert(curproc -> open_files, to_dup, newfd);
+    int err = file_list_insert(curproc -> open_files, to_dup, newfd);
+    if (err == -1)
+    {
+      return EBADF;
+    }
+    return 0;
   }
-  return -1;
 }

@@ -164,13 +164,14 @@ int file_list_insert(file_list *fl, open_file *of, int fd)
       if (node == NULL)
       {
 	linkedlist_insert(fl -> files, fd, of);
-	//how to remove fd from stack ?
+	linkedlist_remove((Linked_List*)fl -> available, fd);
       }
       else
       {
-	linkedlist_remove(fl -> files, fd);
-	linkedlist_insert(fl -> files, fd, of);
+	open_file_decref((open_file*)node -> data);
+	node -> data = of;
       }
+      open_file_incref(of);
     }
     return 0;
   }

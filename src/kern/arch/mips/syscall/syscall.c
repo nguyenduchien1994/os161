@@ -120,7 +120,8 @@ syscall(struct trapframe *tf)
     break;
 
   case SYS_close:
-    retval = close((int)tf->tf_a0);
+    retval = close((int)tf->tf_a0,
+		   &retval);
     break;
 
   case SYS_dup2:

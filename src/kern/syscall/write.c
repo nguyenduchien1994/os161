@@ -11,7 +11,7 @@
 #include <kern/errno.h>
 #include <kern/fcntl.h>
 
-ssize_t write(int fd, const void *buf, size_t nbytes, ssize_t *ret) 
+int write(int fd, const void *buf, size_t nbytes, ssize_t *ret) 
 {
   int err = 0;
   open_file *f = file_list_get(((proc*)curproc)->open_files, fd);
