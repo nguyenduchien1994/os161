@@ -49,6 +49,8 @@
 #include <addrspace.h>
 #include <vnode.h>
 #include <linkedlist.h>
+#include <vfs.h>
+#include <kern/fcntl.h>
 
 /*
  * The process for the kernel; this holds all the kernel-only threads.
@@ -84,27 +86,59 @@ proc_create(const char *name)
 	
 	
 	// To fix with global manager
-	proc->pid = 0;
-	proc->context = NULL;
-	proc->parent = NULL;
+	if (kproc != NULL)
+	{
+	  proc->pid = 0;
+	  proc->context = NULL;
+	  proc->parent = NULL;
 
-	// Complete
-	proc->program_counter = 0;
-	proc->cur_state = new;
+	  // Complete
+	  proc->program_counter = 0;
+	  proc->cur_state = new;
 
-	proc->open_files = file_list_create();
-	if(proc->open_files == NULL){
-	  kfree(proc->p_name);
-	  kfree(proc);
+	  proc->open_files = file_list_create();
+	  if(proc->open_files == NULL){
+	    kfree(proc->p_name);
+	    kfree(proc);
+	  }
+	  if (curproc == NULL || curproc == kproc) // if no user process 
+	  {
+	    
+	    struct vnode *ret = kmalloc(sizeof(struct vnode));
+
+	    
+	    int err = vfs_open((char*)"con:", O_RDONLY, 0444, &ret); 
+  
+	    if (err)
+	    {
+	      panic("Could not access console....Users are deaf...");
+	    }
+
+	    open_file *openfile = open_file_create(ret, 0, O_RDONLY); 
+	    file_list_add(proc->open_files, openfile); //making STD_IN = 0
+	    
+
+	    ret = kmalloc(sizeof(struct vnode));	    
+	    err = vfs_open((char*)"con:", O_WRONLY, 0222, &ret); 
+  
+	    if (err)
+	    {
+	      panic("Could not access console....Users are mute...");
+	    }
+
+	    openfile = open_file_create(ret, 0, O_WRONLY); 
+	    file_list_add(proc->open_files, openfile); //making STD_OUT = 1
+	    file_list_add(proc->open_files, openfile); //making STD_ERR = 2
+
+	  }
+
+	  proc->children = linkedlist_create();
+	  if(proc->children == NULL){
+	    kfree(proc->open_files);
+	    kfree(proc->p_name);
+	    kfree(proc);
+	  }
 	}
-
-	proc->children = linkedlist_create();
-	if(proc->children == NULL){
-	  kfree(proc->open_files);
-	  kfree(proc->p_name);
-	  kfree(proc);
-	}
-
 	return proc;
 }
 

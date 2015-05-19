@@ -19,12 +19,12 @@ typedef
   struct open_file{
               struct vnode *vfile;
               struct lock *file_lk;
-              int flag;
+              int flags;
               volatile off_t offset;
               volatile unsigned refcount;
   } open_file;
 
-open_file* open_file_create(struct vnode *file, off_t init_offset);
+open_file* open_file_create(struct vnode *file, off_t init_offset, int flags);
 void open_file_destroy(open_file *of);
 void open_file_incref(open_file *of);
 void open_file_decref(open_file *of);

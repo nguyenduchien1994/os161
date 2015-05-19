@@ -6,7 +6,7 @@
 #include <synch.h>
 #include <limits.h>
 
-open_file* open_file_create(struct vnode *file, off_t init_offset)
+open_file* open_file_create(struct vnode *file, off_t init_offset, int flags)
 {
   open_file *ret = kmalloc(sizeof(open_file));
   if(ret == NULL){
@@ -22,6 +22,7 @@ open_file* open_file_create(struct vnode *file, off_t init_offset)
   ret->vfile = file;
   ret->offset = init_offset;
   ret->refcount = 0;
+  ret->flags = flags;
   return ret;
 }
 
@@ -68,10 +69,6 @@ file_list* file_list_create(void)
     kfree(ret->files);
     return NULL;
   }
-  linkedlist_append(ret->files,NULL);
-  linkedlist_append(ret->files,NULL);
-  linkedlist_append(ret->files,NULL);
-
   return ret;
 }
 
