@@ -104,29 +104,20 @@ proc_create(const char *name)
 	  if (curproc == NULL || curproc == kproc) // if no user process 
 	  {
 	    
-	    struct vnode *ret = kmalloc(sizeof(struct vnode));
+	    struct vnode *console = kmalloc(sizeof(struct vnode));
 
 	    
-	    int err = vfs_open((char*)"con:", O_RDONLY, 0444, &ret); 
+	    int err = vfs_open((char*)"con:", O_RDWR, 0664, &console); 
   
 	    if (err)
 	    {
-	      panic("Could not access console....Users are deaf...");
+	      panic("Could not access console....Users are deaf and mute...");
 	    }
 
-	    open_file *openfile = open_file_create(ret, 0, O_RDONLY); 
+	    open_file *openfile = open_file_create(console, 0, O_RDONLY);
 	    file_list_add(proc->open_files, openfile); //making STD_IN = 0
-	    
 
-	    ret = kmalloc(sizeof(struct vnode));	    
-	    err = vfs_open((char*)"con:", O_WRONLY, 0222, &ret); 
-  
-	    if (err)
-	    {
-	      panic("Could not access console....Users are mute...");
-	    }
-
-	    openfile = open_file_create(ret, 0, O_WRONLY); 
+	    openfile = open_file_create(console, 0, O_WRONLY); 
 	    file_list_add(proc->open_files, openfile); //making STD_OUT = 1
 	    file_list_add(proc->open_files, openfile); //making STD_ERR = 2
 
