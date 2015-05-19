@@ -9,9 +9,21 @@
 #include <vnode.h>
 #include <usr_file.h>
 #include <current.h>
+#include <limits.h>
 
 int dup2(int oldfd, int newfd, int *ret)
 {
+  if (oldfd == newfd)
+  {
+    *ret = newfd;
+    return 0;
+  }
+
+  if (oldfd < 0 || oldfd >= OPEN_MAX || newfd < 0 || newfd >= OPEN_MAX)
+  {
+    return EBADF;
+  } 
+
   open_file *to_dup = file_list_get(curproc -> open_files, oldfd);
   *ret = newfd;
 
