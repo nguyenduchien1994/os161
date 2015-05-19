@@ -118,7 +118,7 @@ typedef struct proc_mngr{
   struct thread **threads;//256 array
   multi_queue *ready_queue;
   stack *free_ids;
-  struct lock *p_lk;
+  struct lock *glbl_lk;
 } proc_mngr;
 
 proc_mngr *glbl_mngr;

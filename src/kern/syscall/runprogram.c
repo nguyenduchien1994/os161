@@ -44,6 +44,7 @@
 #include <vfs.h>
 #include <syscall.h>
 #include <test.h>
+#include <vnode.h>
 
 /*
  * Load program "progname" and start running it in usermode.
@@ -96,6 +97,22 @@ runprogram(char *progname)
 		/* p_addrspace will go away when curproc is destroyed */
 		return result;
 	}
+
+	struct vnode *console_node = kmalloc(sizeof(struct vnode));
+    
+	int err = vfs_open((char*)"con:", O_RDWR, 0664, &console_node); 
+  
+	if (err)
+	{
+	  panic("Could not access console....Users are deaf and mute...");
+	}
+	
+	open_file *openfile = open_file_create(console_node, 0, O_RDONLY);
+	file_list_add(curproc->open_files, openfile); //making STD_IN = 0
+	
+	openfile = open_file_create(console_node, 0, O_WRONLY); 
+	file_list_add(curproc->open_files, openfile); //making STD_OUT = 1
+	file_list_add(curproc->open_files, openfile); //making STD_ERR = 2
 
 	/* Warp to user mode. */
 	enter_new_process(0 /*argc*/, NULL /*userspace addr of argv*/,

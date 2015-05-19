@@ -84,51 +84,25 @@ proc_create(const char *name)
 	/* VFS fields */
 	proc->p_cwd = NULL;
 	
+	proc->pid = 0;
+	proc->context = NULL;
+	proc->parent = NULL;
 	
-	// To fix with global manager
-	if (kproc != NULL)
-	{
-	  proc->pid = 0;
-	  proc->context = NULL;
-	  proc->parent = NULL;
-
-	  // Complete
-	  proc->program_counter = 0;
-	  proc->cur_state = new;
-
-	  proc->open_files = file_list_create();
-	  if(proc->open_files == NULL){
-	    kfree(proc->p_name);
-	    kfree(proc);
-	  }
-	  if (curproc == NULL || curproc == kproc) // if no user process 
-	  {
-	    
-	    struct vnode *console = kmalloc(sizeof(struct vnode));
-
-	    
-	    int err = vfs_open((char*)"con:", O_RDWR, 0664, &console); 
-  
-	    if (err)
-	    {
-	      panic("Could not access console....Users are deaf and mute...");
-	    }
-
-	    open_file *openfile = open_file_create(console, 0, O_RDONLY);
-	    file_list_add(proc->open_files, openfile); //making STD_IN = 0
-
-	    openfile = open_file_create(console, 0, O_WRONLY); 
-	    file_list_add(proc->open_files, openfile); //making STD_OUT = 1
-	    file_list_add(proc->open_files, openfile); //making STD_ERR = 2
-
-	  }
-
-	  proc->children = linkedlist_create();
-	  if(proc->children == NULL){
-	    kfree(proc->open_files);
-	    kfree(proc->p_name);
-	    kfree(proc);
-	  }
+	// Complete
+	proc->program_counter = 0;
+	proc->cur_state = new;
+	
+	proc->open_files = file_list_create();
+	if(proc->open_files == NULL){
+	  kfree(proc->p_name);
+	  kfree(proc);
+	}
+	
+	proc->children = linkedlist_create();
+	if(proc->children == NULL){
+	  kfree(proc->open_files);
+	  kfree(proc->p_name);
+	  kfree(proc);
 	}
 	return proc;
 }
