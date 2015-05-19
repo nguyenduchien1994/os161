@@ -10,6 +10,7 @@
 #include <types.h>
 #include <linkedlist.h>
 
+
 /*
  * Represents a file opened by process
  * File descriptor represented by index(key) in file_list
@@ -18,12 +19,15 @@ typedef
   struct open_file{
               struct vnode *vfile;
               struct lock *file_lk;
-              off_t offset;
+              int flag;
+              volatile off_t offset;
+              volatile unsigned refcount;
   } open_file;
 
 open_file* open_file_create(struct vnode *file, off_t init_offset);
 void open_file_destroy(open_file *of);
-
+void open_file_incref(open_file *of);
+void open_file_decref(open_file *of);
 
 typedef 
   struct file_list{
