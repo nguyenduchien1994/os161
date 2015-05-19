@@ -201,11 +201,11 @@ void * linkedlist_remove(Linked_List *list, int key){
       }
       else
       {
-	while(node != NULL && key < node->key)
+	while(node != NULL && key > node->key)
 	{
 	  node = node->next;
 	}
-	if(node != NULL)
+	if(node != NULL && node->key == key)
 	{
 	  if (node -> next == NULL)
 	  {

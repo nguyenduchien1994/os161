@@ -118,7 +118,7 @@ static Linked_List_Node *file_list_get_node(file_list *fl, int fd)
     {
       node = node -> next;
     }
-    if (node -> key != fd)
+    if (node != NULL && node -> key != fd)
     {
       return NULL;
     }
