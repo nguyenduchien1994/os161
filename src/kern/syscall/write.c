@@ -33,6 +33,7 @@ int write(int fd, const void *buf, size_t nbytes, ssize_t *ret)
 		f->offset, 
 		UIO_WRITE);
       write_uio->uio_segflg = UIO_USERSPACE;
+      write_uio->uio_space = curproc->p_addrspace;
       write_uio->uio_resid = nbytes;
       
       while(!err && write_uio->uio_resid)

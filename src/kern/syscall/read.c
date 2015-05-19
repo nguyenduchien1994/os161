@@ -35,6 +35,7 @@ int read(int fd, void *buf, size_t buflen, ssize_t *ret)
       uio_kinit(&iov,read_uio,(void*)buf,buflen,to_read->offset,UIO_READ);
 
       read_uio->uio_segflg = UIO_USERSPACE;
+      read_uio->uio_space = curproc->p_addrspace;
       read_uio->uio_resid = buflen;
 
       while (!err && read_uio->uio_resid)

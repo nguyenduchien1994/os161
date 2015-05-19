@@ -114,7 +114,7 @@ static Linked_List_Node *file_list_get_node(file_list *fl, int fd)
   else
   {
     Linked_List_Node *node = fl -> files -> first;
-    while(node != NULL && fd < node -> key)
+    while(node != NULL && fd > node -> key)
     {
       node = node -> next;
     }

@@ -82,13 +82,25 @@ typedef struct proc {
 
 /*
  * Process API
- *
+ * 
+ * proc_create
+ *     
+ * 
+ * proc_destroy
+ * 
+ *      
+ * proc_copy
+ *     
+ * 
  * set_state
  *     Sets the given process' state to the given state.
  * 
  * set_p_cwd
  *     Sets the given process' current working directory to the given directory 
  */
+proc* proc_create(const char *name);
+void proc_destroy(struct proc *proc);
+proc* proc_copy(proc *p);
 
 void set_state(proc *p, state s);
 

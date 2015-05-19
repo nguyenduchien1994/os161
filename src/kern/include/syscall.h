@@ -38,7 +38,7 @@ struct trapframe; /* from <machine/trapframe.h> */
  * The system call dispatcher.
  */
 
-void syscall(struct trapframe *tf);
+void syscall(void *trapframe, unsigned long junk);
 
 /*
  * Support functions.
@@ -54,7 +54,7 @@ int dup2(int oldfd, int newfd, int *ret);
 int chdir(const char *pathname);
 int __getcwd(char *buf, size_t buflen, int *ret);
 int getpid(pid_t *ret);
-int fork(pid_t *pret, pid_t *cret);//two returns for parent and child
+int fork(pid_t *ret);
 int execv(const char *program, char **args);
 int waitpid(pid_t pid, int *status, int options, pid_t *ret);
 
