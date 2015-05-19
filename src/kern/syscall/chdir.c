@@ -14,7 +14,7 @@ int chdir(const char *pathname)
                      
   if (pathname == NULL)                                                                                    
     {
-      return ENOENT;                                                                                                           
+      return EFAULT;                                                                                                           
     }    
 
   void* namedest = kmalloc(sizeof(pathname));                                                                               
@@ -26,6 +26,10 @@ int chdir(const char *pathname)
       return err;                                                                                                            
     }                                                                
   //set_p_cwd(userproc, dest);                                                                                            
-  vfs_chdir(namedest);                                                                                                  
+  err = vfs_chdir(namedest);                                                                                              
+  if (err)
+    {
+      return err;
+    }
   return 0;                           
 }

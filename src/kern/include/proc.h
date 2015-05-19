@@ -55,6 +55,12 @@ typedef enum state{
 	      dead
 } state;
 
+typedef enum run_type{
+  kernel,
+  interactive,
+  background
+} run_type;
+
 /*
  * Process structure.
  */
@@ -77,7 +83,8 @@ typedef struct proc {
   file_list *open_files;
   struct proc *parent;
   Linked_List *children;
-  
+  run_type rt;
+
 } proc;
 
 /*
@@ -170,12 +177,11 @@ int proc_mngr_add(proc_mngr *this, proc *p, struct thread *t);
 void proc_mngr_remove(proc_mngr *this, proc *p);
 
 struct thread* proc_mngr_get_thread(proc_mngr *this, proc *p);
-proc* proc_mngr_get_proc(proc_mngr *this, struct thread *t);
+struct lock* proc_mngr_get_lock(proc_mngr *this);
+
 proc* proc_mngr_get_from_pid(proc_mngr *this, pid_t pid);
-void proc_mngr_get_lock(proc_mngr *this);
 
 void proc_mngr_make_ready(proc_mngr *this, proc *p);
-void proc_mngr_make_wait(proc_mngr *this, proc *p);
 
 
 /* This is the process structure for the kernel and for kernel-only threads. */
