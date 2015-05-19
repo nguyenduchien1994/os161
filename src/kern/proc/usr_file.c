@@ -198,21 +198,17 @@ open_file *file_list_get(file_list *fl, int fd)
  */
 open_file *file_list_remove(file_list *fl, int fd)
 {
-  Linked_List_Node *in_list = file_list_get_node(fl,fd);
-
-  if (in_list == NULL)
+  if (fd < 0 || fd > INT_MAX)
   {
-    //don't change stack
     return NULL;
   }
   else
-  {
-    //change stack
-    open_file *ret = linkedlist_remove(fl -> files, fd);
-    
-    int *to_push = kmalloc(sizeof(int));
-    *to_push = fd;
-    stack_push(fl -> available, to_push);
-    return ret;
+  {      //change stack
+      open_file *ret = linkedlist_remove(fl -> files, fd);
+      
+      int *to_push = kmalloc(sizeof(int));
+      *to_push = fd;
+      stack_push(fl -> available, to_push);
+      return ret;
   }
 }
