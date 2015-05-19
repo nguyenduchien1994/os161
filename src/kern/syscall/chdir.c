@@ -14,7 +14,7 @@ int chdir(const char *pathname)
                      
   if (pathname == NULL)                                                                                    
     {
-      return ENOENT;                                                                                                           
+      return EFAULT;                                                                                                           
     }    
 
   void* namedest = kmalloc(sizeof(pathname));                                                                               

@@ -15,21 +15,27 @@ int open(const char *filename, int flags)
   
    if (filename == NULL)                                                                                    
     {
-      return ENOENT;                                                                                                           
+      return EFAULT;                                                                                                      
     }
+
+   
 
    void* namedest = kmalloc(sizeof(filename));
    int err = copyin((const_userptr_t)filename, namedest, sizeof(filename));
 
-   if (err != 0)
+   if (err)
    {
-      return EIO;
+      return err;
    }
 
    struct vnode *file = kmalloc(sizeof(struct vnode));
    struct vnode **ret = &file;
   
-   
+   if (flags == O_RDONLY || flags == O_WRONLY || flags == O_RDWR)
+     {
+       return EINVAL;
+     }
+
   mode_t mode;
 
   if(flags == O_RDONLY)
@@ -47,7 +53,7 @@ int open(const char *filename, int flags)
   else
     {
       mode = 0000;
-      //return error?
+      return EINVAL;
     }
 
     err = vfs_open(namedest, flags, mode, ret); 
@@ -57,6 +63,10 @@ int open(const char *filename, int flags)
       return err;
     }
 
+    //    if (file->vn_data  == NULL && flags != O_CREAT)
+    //{
+    //return ENOENT;
+    //}
     open_file *openfile = open_file_create(file, 0, flags); 
   
     err = file_list_add(curproc->open_files, openfile);
