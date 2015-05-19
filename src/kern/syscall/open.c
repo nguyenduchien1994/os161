@@ -13,7 +13,11 @@
 int open(const char *filename, int flags)
 {
   
-  
+   if (filename == NULL)                                                                                    
+    {
+      return ENOENT;                                                                                                           
+    }
+
    void* namedest = kmalloc(sizeof(filename));
    int err = copyin((const_userptr_t)filename, namedest, sizeof(filename));
 

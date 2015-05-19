@@ -23,7 +23,7 @@ int read(int fd, void *buf, size_t buflen, ssize_t *ret)
   }
   else
   {
-    if (to_read->flag & O_WRONLY)
+    if (to_read->flags & O_WRONLY)
     {
       err =  EBADF;
     } 
