@@ -16,7 +16,6 @@ int close(int fd, int *ret)
 
   if (to_close == NULL)
   {
-    // the file handle is not valid
     return EBADF;
   }
   else

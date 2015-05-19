@@ -6,10 +6,13 @@
 #include <uio.h>
 #include <kern/iovec.h>
 #include <proc.h>
+#include <current.h>
 
 int __getcwd(char *buf, size_t buflen, int *ret)
 {
-  (void)ret;
+  if(buf == NULL){
+    return EFAULT;
+  }
   //splhigh();
   struct iovec *db = kmalloc(sizeof(struct iovec));
   if(db == NULL){
@@ -25,12 +28,15 @@ int __getcwd(char *buf, size_t buflen, int *ret)
 
   uio_kinit(db, name_uio, buf, buflen, 0, UIO_READ);
   name_uio->uio_segflg = UIO_USERSPACE;
+  name_uio->uio_space = curproc->p_addrspace;
+  name_uio->uio_resid = buflen;
 
   int err = vfs_getcwd(name_uio);
   if(err){
     //spl0();
-    return -1;
+    return err;
   }
   //spl0();  
-  return name_uio->uio_offset;
+  *ret = name_uio->uio_offset;
+  return 0;
 }
