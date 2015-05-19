@@ -76,8 +76,10 @@
  * registerized values, with copyin().
  */
 void
-syscall(struct trapframe *tf)
+syscall(void *trapframe, unsigned long junk)
 {
+  (void)junk;
+  struct trapframe *tf = (struct trapframe*)trapframe;
   int callno;
   int32_t retval;
   int err;

@@ -58,8 +58,7 @@ struct proc *kproc;
 /*
  * Create a proc structure.
  */
-static
-struct proc *
+proc *
 proc_create(const char *name)
 {
 	struct proc *proc;
@@ -115,8 +114,7 @@ proc_create(const char *name)
  * Note: nothing currently calls this. Your wait/exit code will
  * probably want to do so.
  */
-void
-proc_destroy(struct proc *proc)
+void proc_destroy(struct proc *proc)
 {
 	/*
 	 * You probably want to destroy and null out much of the
@@ -364,4 +362,66 @@ void set_p_cwd(proc * p, struct vnode * new)
   vnode_decref(p->p_cwd);
   p->p_cwd = new;
   vnode_incref(new);
+}
+
+proc* proc_copy(proc *p)
+{
+  struct proc *ret;
+  
+  ret = kmalloc(sizeof(proc));
+  if (ret == NULL) {
+    return NULL;
+  }
+  ret->p_name = kstrdup(p->p_name);
+  if (ret->p_name == NULL) {
+    kfree(ret);
+    return NULL;
+  }
+  
+  threadarray_init(&ret->p_threads);
+  spinlock_init(&ret->p_lock);
+  
+  /* VM fields */
+  ret->p_addrspace = p->p_addrspace;
+  
+  /* VFS fields */
+  ret->p_cwd = p->p_cwd;
+  
+	
+  
+  ret->pid = 0;
+  //copy
+  ret->context = p->context;
+  ret->parent = NULL;
+  
+  // Complete
+  ret->program_counter = p->program_counter;
+  ret->cur_state = p->cur_state;
+  
+  ret->open_files = file_list_create();
+  if(ret->open_files == NULL){
+    kfree(ret->p_name);
+    kfree(ret);
+  }
+
+  Linked_List_Node *runner = p->open_files->files->first;
+  while(runner != NULL){
+    linkedlist_insert(ret->open_files->files, runner->key, runner->data);
+    runner = runner->next;
+  }
+
+  runner = p->open_files->available->first;
+  while(runner != NULL){
+    linkedlist_insert(ret->open_files->available, runner->key, runner->data);
+    runner = runner->next;
+  }
+  
+  ret->children = linkedlist_create();
+  if(ret->children == NULL){
+    kfree(ret->open_files);
+    kfree(ret->p_name);
+    kfree(ret);
+  }
+  return ret;
+
 }
