@@ -8,9 +8,15 @@
 #include <vnode.h>
 #include <usr_file.h>
 #include <current.h>
+#include <limits.h>
 
 int close(int fd, int *ret)
 {
+  if (fd < 0 || fd > INT_MAX)
+  {
+    return EBADF;
+  }
+  
   open_file *to_close = file_list_remove(curproc->open_files,fd);
   *ret = 0;
 
