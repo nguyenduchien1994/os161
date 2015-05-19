@@ -171,9 +171,10 @@ int file_list_insert(file_list *fl, open_file *of, int fd)
       }
       else
       {
-	//open_file_decref((open_file*)node -> data);
+	open_file_decref((open_file*)node -> data);
 	node -> data = of;
       }
+      open_file_incref(of);
     }
     return 0;
   }
