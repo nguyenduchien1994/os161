@@ -19,8 +19,7 @@ int read(int fd, void *buf, size_t buflen, ssize_t *ret)
     return EBADF;
   }
 
-  void *buf_space = kmalloc(sizeof(*buf)*buflen);
-  if (buf_space == NULL)
+  if (buf == NULL)
   {
     return EFAULT;
   }
@@ -49,7 +48,7 @@ int read(int fd, void *buf, size_t buflen, ssize_t *ret)
       read_uio->uio_segflg = UIO_USERSPACE;
       read_uio->uio_space = curproc->p_addrspace;
       read_uio->uio_resid = buflen;
-
+      
       while (!err && read_uio->uio_resid)
       {
 	err = to_read->vfile->vn_ops->vop_read(to_read->vfile,read_uio);
