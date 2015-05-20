@@ -2,27 +2,33 @@ Design Report
 Julia Isaac, Tristan Johnson and Hien Nguyen
  
 Process Management
-We are going to use a one-to-one mapping of kernel threads to user processes. This way we do not need to worry about preemptive or non-preemptive.  
+We are going to use a one-to-one mapping of kernel threads to user processes. We use round robin scheduling which requires the process to be preemptive. 
 
 PCB
 To make a user process, we will need to construct a new PCB. Then add it to global management, making the state of the process being ready. We will also need to acquire the process lock before we can call schedule. We will also be adding a "exit cv" to the PCB. In addition, we will add an exit code to the PCB. 
 
 struct PCB {
 	char * p_name;
-	spinlock p_lock;
+	struct spinlock p_lock;
     	struct thread array pthreads;
 	struct addrspace *paddrspace;
 	struct vnode *p_cwd;
 	/* need */
 	pid_t pid;
 	pc_t program_counter;
-	trap_frame *reg;
-	vnode **open_files;//array
-	PCB *parent;
-	linked_list *children;
+	state cur_state;
+	trap_frame *context;
+	struct file_list *open_files; // file_list is an ADT that we made to hold the open files of each process
+	proc *parent;	       
+	linked_list *children; 
+	int exit_status; 
+	lock *exit_lock;
+	cv exit_cv;
+	int wait_count; // count the # of processes that are waiting for this process to terminate
+	run_type rt;
 }
 
-We will handle process termination by removing the PCB from memory and freeing all of the variables. If parents die their children will die by default. If child does doesn't effect parent.
+We will handle process termination by removing the PCB from memory and freeing all of the variables. If parents die their children will die by default. If child dies it doesn't effect parent.
 
 Our implementation protect the kernel and user processes from rogue processes with scheduling and locks. 
 
@@ -36,14 +42,14 @@ In the global management, we will have an array of all the processes and an arra
 
 Handling File Systems:
 Open Tracking
-In the PCB, we will have an array of files that are open and the maximum length of the file is 32. To keep track of all of the files the next available slot we will use a stack. We will then give the vnode a "p-lock". This way in order to access, we need to own the p_lock. When we remove the file from our list by closing the file, we will release the p_lock. We are also planning on using the file system directly instead of creating our own large list of files. If the process tries to open or own too many files, we will kill the process. 
+In the PCB, we will have an array of files that are open and the maximum number of file is 32. To keep track of all of the files the next available slot we will use a stack. We will then give the vnode a "p-lock". This way in order to access, we need to own the p_lock. When we remove the file from our list by closing the file, we will release the p_lock. We are also planning on using the file system directly instead of creating our own large list of files. If the process tries to open or own too many files, we will kill the process. Each PCB contains it own file_list that contains all the open files. The files_list ADT consists of a LinkedList to holds the files and a stack which helps to keep track and monitor basic access of the files such as insertion or deletion. Each open file is represented as an open_file ADT that has the vnode file, lock, flag and offset. Many syscalls such as dup2, read, write, etc take advantages of the implemented methods from file_list and open_file ADTs to do most of the works.       
 
 Syscalls:
 open
-This will interface with the file system. We will call vfs_open and then acquire the lock and to list. It will have to access the file system, PCB and global management. Different error that occur are if the filename doesn't exist, it is not in the directory or etc. This will be handled by returning an error code. No data will need to be moved between user space and kernel space. 
+This will interface with the file system. We will call vfs_open and as well as do error checks. It will have to access the file system, PCB and global management. Different error that occur are if the filename doesn't exist, it is not in the directory or etc. This will be handled by returning an error code. The data that will need to be moved between user space and kernel space is the name of the file.
 
 read
-This will interface with the file system. We will call vop_read. It will have to access the	file system, PCB and globla management. Different error that occur are if the filename doesn't exist, it is not in the directory or etc.  This will be handled by returning an error code. Data will need to be moved between user space and kernel space.
+This will interface with the file system. We will call vop_read. It will have to access the file system, PCB and globla management. Different error that occur are if the filename doesn't exist, it is not in the directory or etc.  This will be handled by returning an error code. Data will need to be moved between user space and kernel space.
 
 write
 This will interface with the file system. We will call vop_write. It will have to access the file system, PCB and global management. Different error that occur are if the filename doesn't exist, it is not in the directory or etc.  This will be handled by returning an error code. Data will need to be moved between user space and kernel space.
@@ -55,7 +61,7 @@ close
 This will interface with the file system. We will first remove from list. Next we will call vfs_close and then release lock. It will have to access the file system, PCB and global management. Different error that occur are if the filename doesn't exist, it is not in the directory or etc. This will be handled by returning an error code. No data will need to be moved between user space and kernel space. 
 
 dup2
-This will interface with the file system. We will create a new file that we will write to. We will then read from the original file and write what is read from the original file to the new file.It will have to access the file system, PCB and global management. Different error that occur are if the filename doesn't exist, it is not in the directory or etc. This will be handled by returning an error code. Data will need to be moved between user space and kernel space.  
+This will interface with the file system. We will create a new file that we will write to. We will then read from the original file and write what is read from the original file to the new file.It will have to access the file system, PCB and global management. We check the file handle to make sure that the file exists (if file handle is < 0 or file handle is bigger than the maximum open file allowed). This will be handled by returning an error code. Data will need to be moved between user space and kernel space.  
 
 chdir
 This will interface with the file system. We will call vfs_chdir. It will have to access the file system, PCB and global management. Different error that occur are if the directory doesn't exist or etc. This will be handled by returning an error code. No data will need to be moved between user space and kernel space. 
@@ -64,22 +70,22 @@ __getcwd
 This will interface with the file system. We will call vfs_getcwd. It will have to access the file system, PCB and global management. Different error that occur are if the directory doesn't exist or etc. This will be handled by returning an error code. No data will need to be moved between user space and kernel space. 
 
 getpid
-This will interface with our PCB. Return the value from the current process PCB, which is accessed by using the mapping in the global management. Synchronization will not be required or needed. The error that can occur is that there is not pid because the PCB does not exist, we will handle this by returning an error code. Data will be moved between user space and kernel space.
+This will interface with our PCB. Return the value from the current process PCB, which is accessed by using the mapping in the global management. Synchronization will not be required or needed. There is no error that can occur because getpid does not fail. Data will be moved between user space and kernel space.
 
 fork
 This will interface with our PCB. Create new PCB, and sets it up to be ready. This identical to the original PCB except the pid will differ and the program counter will be set to zero. We will need synchronization for fork. The error states that can occur are that there are too many processes and we will handle that by returning an error code. No data will need to move between user space and kernel space. 
 
 execv
-This will interface with PCB and global manager. This will call runprogram.  Synchronization and communication between processes/kernel threads will be needed. Error states that can occur are issues with the program, such as the program does not exist or the program is a directory, etc. We will handle this by returning an error code. Data will be moved between user space and kernel space.
+This will interface with PCB and global manager. This will call runprogram.  Synchronization and communication between processes/kernel threads will be needed. Error states that can occur are issues with the program, such as the program does not exist or the program is a directory, etc. We will handle this by returning an error code. Data such as the program name will be moved between user space and kernel space.
 
 waitpid
-This will interface with our PCB and global manager. This will first assert that the PID exists and it doesn't it will set the status to an error exit code, such as -1 or NULL. This will wait on the "exit cv" and then set the status to be the exit code associated with the exited process. Then we call P() on the kill semaphore. Errors that can occur are the different arguments not existing, we will handle this by checking if the arguments exist and if there is an issue return and error code. No data will be moved between user space and kernel space.
+This will interface with our PCB and global manager. This will first assert that the PID exists and it doesn't it will set the status to an error exit code, such as -1 or NULL. This will wait on the "exit cv" and then set the status to be the exit code associated with the exited process. Then we call P() on the kill semaphore. Errors that can occur are the different arguments not existing, we will handle this by checking if the arguments exist and if there is an issue return and error code. Data will be moved between user space and kernel space because we need to return the process status.
 
 _exit
-This will interface with the global manager. It will look for the pid_t in the global manager and get the exit code from the manager. Once a process exits a semaphore will be made.  This will then broadcast to the "exit cv". Call V() n times for n waiting, and then delete and bookkeep current process in global manager. Errors that can occur are the process doesn't exist and we will handle this be not doing anything since the process either doesn't exist or was already terminated. No data will be moved between user space and kernel space. 
+This will interface with the global manager. It will look for the pid_t in the global manager and get the exit code from the manager. We use lock and cv to monitor the waiting processes from waitpid to make sure that the race conditions do not occur. This will then broadcast to the "exit cv". Call V() n times for n waiting, and then delete and bookkeep current process in global manager. Errors that can occur are the process doesn't exist and we will handle this be not doing anything since the process either doesn't exist or was already terminated. No data will be moved between user space and kernel space. 
 
 
 Working as a team
-Each team member will get a series of syscalls they will be responsible to implement. Every few days we will meet to make sure everyone is on track with the syscalls they have implemented. In these meetings, we will be making sure that everyone is keeping up with what they are implementing to ensure everything will be done on time. Each team member will also create tests for the other teammates syscalls to make sure we are testing thoroughly. The tests should be written before the syscalls are written.  
+Each team member will get a series of syscalls they will be responsible to implement individually and there will be series of syscalls we will workon together. Tristain will implement __getcwd, lseek and write. Hien will implement read, dup2 and close. Julia will implement getpid, chdir and open. The rest of the syscalls (fork, execv, waitpid and _exit) we implemented together.  Every few days we will meet to make sure everyone is on track with the syscalls they have implemented. In these meetings, we will be making sure that everyone is keeping up with what they are implementing to ensure everything will be done on time. We all implemented our individual syscalls first and then worked on the other syscalls. We also implemented the different ADTs and APIs as we went. In hindsight, we should have completed all of the ADTs and APIs first before implementing the syscalls. Also, even though we completed the beginning steps Matt stated in class before implementing the syscalls, we should have planned out a better order of implementing syscalls instead of doing them all at once.    
 
-We will work as a group by having group meetings very few days and communicate with each other through group messages. In the group messages, we will inform our teammates when we are working on the project to ensure we are avoiding merge conflicts.  
+We will work as a group by having group meetings very few days and communicate with each other through group messages. In the group messages, we will inform our teammates when we are working on the project to ensure we are avoiding merge conflicts.   
