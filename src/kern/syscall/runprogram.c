@@ -46,6 +46,7 @@
 #include <test.h>
 #include <vnode.h>
 
+
 /*
  * Load program "progname" and start running it in usermode.
  * Does not return except on error.
@@ -97,7 +98,11 @@ runprogram(char *progname)
 		/* p_addrspace will go away when curproc is destroyed */
 		return result;
 	}
-
+	
+	if(glbl_mngr == NULL){
+	  glbl_mngr = proc_mngr_create();
+	}
+	
 	struct vnode *console_node = kmalloc(sizeof(struct vnode));
     
 	int err = vfs_open((char*)"con:", O_RDWR, 0664, &console_node); 

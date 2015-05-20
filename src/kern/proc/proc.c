@@ -51,6 +51,7 @@
 #include <linkedlist.h>
 #include <vfs.h>
 #include <kern/fcntl.h>
+#include <machine/trapframe.h>
 
 /*
  * The process for the kernel; this holds all the kernel-only threads.
@@ -107,7 +108,6 @@ proc_create(const char *name)
 
 	proc->exit_lock = lock_create("exit");
 	proc->exit_cv = cv_create("exit");
-
 	return proc;
 }
 
@@ -370,15 +370,56 @@ void set_p_cwd(proc * p, struct vnode * new)
   vnode_incref(new);
 }
 
-proc* proc_copy(proc *p)
+struct trapframe* copy_context(void){
+  struct trapframe* tf = kmalloc(sizeof(struct trapframe));
+  tf->tf_vaddr = curproc->context->tf_vaddr;
+  tf->tf_status = curproc->context->tf_status;
+  tf->tf_cause = curproc->context->tf_cause;
+  tf->tf_lo = curproc->context->tf_lo;
+  tf->tf_hi = curproc->context->tf_hi;
+  tf->tf_ra = curproc->context->tf_ra;
+  tf->tf_at = curproc->context->tf_at;
+  tf->tf_v0 = curproc->context->tf_v0;
+  tf->tf_v1 = curproc->context->tf_v1;
+  tf->tf_a0 = curproc->context->tf_a0;
+  tf->tf_a1 = curproc->context->tf_a1;
+  tf->tf_a2 = curproc->context->tf_a2;
+  tf->tf_a3 = curproc->context->tf_a3;
+  tf->tf_t0 = curproc->context->tf_t0;
+  tf->tf_t1 = curproc->context->tf_t1;
+  tf->tf_t2 = curproc->context->tf_t2;
+  tf->tf_t3 = curproc->context->tf_t3;
+  tf->tf_t4 = curproc->context->tf_t4;
+  tf->tf_t5 = curproc->context->tf_t5;
+  tf->tf_t6 = curproc->context->tf_t6;
+  tf->tf_t7 = curproc->context->tf_t7;
+  tf->tf_t8 = curproc->context->tf_t8;
+  tf->tf_t9 = curproc->context->tf_t9;
+  tf->tf_s0 = curproc->context->tf_s0;
+  tf->tf_s1 = curproc->context->tf_s1;
+  tf->tf_s2 = curproc->context->tf_s2;
+  tf->tf_s3 = curproc->context->tf_s3;
+  tf->tf_s4 = curproc->context->tf_s4;
+  tf->tf_s5 = curproc->context->tf_s5;
+  tf->tf_s6 = curproc->context->tf_s6;
+  tf->tf_s7 = curproc->context->tf_s7;
+  tf->tf_gp = curproc->context->tf_gp;
+  tf->tf_sp = curproc->context->tf_sp;
+  tf->tf_s8 = curproc->context->tf_s8;
+  tf->tf_epc = curproc->context->tf_epc;
+  return tf;
+}
+
+proc* proc_copy(void)
 {
+  KASSERT(curproc != NULL);
   struct proc *ret;
   
   ret = kmalloc(sizeof(proc));
   if (ret == NULL) {
     return NULL;
   }
-  ret->p_name = kstrdup(p->p_name);
+  ret->p_name = kstrdup(curproc->p_name);
   if (ret->p_name == NULL) {
     kfree(ret);
     return NULL;
@@ -388,21 +429,21 @@ proc* proc_copy(proc *p)
   spinlock_init(&ret->p_lock);
   
   /* VM fields */
-  ret->p_addrspace = p->p_addrspace;
+  ret->p_addrspace = curproc->p_addrspace;
   
   /* VFS fields */
-  ret->p_cwd = p->p_cwd;
+  ret->p_cwd = curproc->p_cwd;
   
 	
   
   ret->pid = 0;
   //copy
-  ret->context = p->context;
+  
+  ret->context = copy_context();
   ret->parent = NULL;
   
   // Complete
-  ret->program_counter = p->program_counter;
-  ret->cur_state = p->cur_state;
+  ret->cur_state = curproc->cur_state;
   
   ret->open_files = file_list_create();
   if(ret->open_files == NULL){
@@ -410,13 +451,13 @@ proc* proc_copy(proc *p)
     kfree(ret);
   }
 
-  Linked_List_Node *runner = p->open_files->files->first;
+  Linked_List_Node *runner = curproc->open_files->files->first;
   while(runner != NULL){
     linkedlist_insert(ret->open_files->files, runner->key, runner->data);
     runner = runner->next;
   }
 
-  runner = p->open_files->available->first;
+  runner = curproc->open_files->available->first;
   while(runner != NULL){
     linkedlist_insert(ret->open_files->available, runner->key, runner->data);
     runner = runner->next;

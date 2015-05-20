@@ -11,8 +11,8 @@ proc_mngr* proc_mngr_create(void)
   proc_mngr *ret = kmalloc(sizeof(proc_mngr));
   KASSERT(ret != NULL);
   
-  ret->usr_procs = kmalloc(sizeof(proc*) * 256);
-  KASSERT(ret->usr_procs != NULL);
+  ret->procs = kmalloc(sizeof(proc*) * 256);
+  KASSERT(ret->procs != NULL);
 
   ret->threads = kmalloc(sizeof(struct thread*) * 256);
   KASSERT(ret->threads != NULL);
@@ -26,7 +26,7 @@ proc_mngr* proc_mngr_create(void)
 
   ret->free_ids = stack_create();
   int *to_push;
-  for(int i = 0; i < 256; i++){
+  for(int i = 255; i <= 0; i--){
     to_push = kmalloc(sizeof(int));
     *to_push = i;
     stack_push(ret->free_ids, to_push);
@@ -47,7 +47,7 @@ void proc_mngr_destroy(proc_mngr *ptr)
   kfree(ptr->free_ids);
   kfree(ptr->ready_queue);
   kfree(ptr->threads);
-  kfree(ptr->usr_procs);
+  kfree(ptr->procs);
   kfree(ptr);
 }
 
@@ -55,19 +55,24 @@ int proc_mngr_add(proc_mngr *this, proc *p, struct thread *t)
 {
   KASSERT(this != NULL);
   
-  lock_acquire(this->glbl_lk);
-
+  if(p != kproc){
+    lock_acquire(this->glbl_lk);
+  }
   pid_t pid;
   if(this->free_ids->first == NULL){
     pid = -1;
   }
   else{
     pid = *((pid_t*)stack_pop(this->free_ids));
-    *(this->usr_procs + pid*(sizeof(proc*))) = p;
+    *(this->procs + pid*(sizeof(proc*))) = p;
     *(this->threads + pid*(sizeof(struct thread*))) = t;
   }
 
-  lock_release(this->glbl_lk);
+  p->pid = pid;
+
+  if(p != kproc){
+    lock_release(this->glbl_lk);
+  }
   
   return pid;
 }

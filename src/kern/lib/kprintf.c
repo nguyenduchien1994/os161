@@ -100,6 +100,7 @@ kprintf(const char *fmt, ...)
 	bool dolock;
 
 	dolock = kprintf_lock != NULL
+                && curthread != NULL
 		&& curthread->t_in_interrupt == false
 		&& curthread->t_curspl == 0
 		&& curcpu->c_spinlocks == 0;

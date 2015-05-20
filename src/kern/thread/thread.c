@@ -776,30 +776,32 @@ thread_startup(void (*entrypoint)(void *data1, unsigned long data2),
 void
 thread_exit(void)
 {
-  lock_acquire(menu_lock);
-  cv_signal(menu_cv, menu_lock);
-  lock_release(menu_lock);
-
-	struct thread *cur;
-
-	cur = curthread;
-
-	/*
-	 * Detach from our process. You might need to move this action
-	 * around, depending on how your wait/exit works.
-	 */
-	proc_remthread(cur);
-
-	/* Make sure we *are* detached (move this only if you're sure!) */
-	KASSERT(cur->t_proc == NULL);
-
-	/* Check the stack guard band. */
-	thread_checkstack(cur);
-
-	/* Interrupts off on this processor */
-        splhigh();
-	thread_switch(S_ZOMBIE, NULL, NULL);
-	panic("braaaaaaaiiiiiiiiiiinssssss\n");
+  if(curproc->parent == kproc){
+    lock_acquire(menu_lock);
+    cv_signal(menu_cv, menu_lock);
+    lock_release(menu_lock);
+  }
+ 
+ struct thread *cur;
+  
+  cur = curthread;
+  
+  /*
+   * Detach from our process. You might need to move this action
+   * around, depending on how your wait/exit works.
+   */
+  proc_remthread(cur);
+  
+  /* Make sure we *are* detached (move this only if you're sure!) */
+  KASSERT(cur->t_proc == NULL);
+  
+  /* Check the stack guard band. */
+  thread_checkstack(cur);
+  
+  /* Interrupts off on this processor */
+  splhigh();
+  thread_switch(S_ZOMBIE, NULL, NULL);
+  panic("braaaaaaaiiiiiiiiiiinssssss\n");
 }
 
 /*
