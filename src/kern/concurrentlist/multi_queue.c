@@ -3,7 +3,7 @@
 #include <lib.h>
 
 
-multi_queue* multi_queue_create(int * turns, int size)
+multi_queue* multi_queue_create(int turns[], int size)
 {
   multi_queue *ret = kmalloc(sizeof(multi_queue));
   
@@ -24,7 +24,8 @@ multi_queue* multi_queue_create(int * turns, int size)
   }
 
   for(int i = 0; i < size; i++){
-    *(ret->queues + i*sizeof(queue*)) = queue_create();
+    queue *to_add = queue_create();
+    *(ret->queues + i*sizeof(queue*)) = to_add;
     if(ret->queues + i*sizeof(queue*) == NULL){
       for(int j = 0; j < i; j++){
 	kfree(ret->queues + j*sizeof(queue*));
@@ -34,7 +35,7 @@ multi_queue* multi_queue_create(int * turns, int size)
       kfree(ret);
       return NULL;
     }
-    *(ret->turns + i*sizeof(int)) = *(turns + i*sizeof(int));
+    *(ret->turns + i*sizeof(int)) = turns[i];
   }
 
   return ret;

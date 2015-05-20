@@ -429,7 +429,7 @@ enter_new_process(int argc, userptr_t argv, userptr_t env,
 
 	tf.tf_status = CST_IRQMASK | CST_IEp | CST_KUp;
 	tf.tf_epc = entry;
-	tf.tf_a0 = argc;
+	tf.tf_a0 = argc; 
 	tf.tf_a1 = (vaddr_t)argv;
 	tf.tf_a2 = (vaddr_t)env;
 	tf.tf_sp = stack;
