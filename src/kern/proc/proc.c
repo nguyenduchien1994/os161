@@ -107,6 +107,12 @@ proc_create(const char *name)
 	}
 
 	proc->exit_lock = lock_create("exit");
+	if(proc->exit_lock == NULL){
+	  kfree(proc->children);
+	  kfree(proc->open_files);
+	  kfree(proc->p_name);
+	  kfree(proc);
+	}
 	proc->exit_cv = cv_create("exit");
 	return proc;
 }
@@ -375,8 +381,7 @@ void set_state(proc *p, state s)
   p->cur_state = s;
 }
 
-struct trapframe* copy_context(void){
-  struct trapframe* tf = kmalloc(sizeof(struct trapframe));
+void copy_context(struct trapframe* tf){
   tf->tf_vaddr = curproc->context->tf_vaddr;
   tf->tf_status = curproc->context->tf_status;
   tf->tf_cause = curproc->context->tf_cause;
@@ -412,7 +417,6 @@ struct trapframe* copy_context(void){
   tf->tf_sp = curproc->context->tf_sp;
   tf->tf_s8 = curproc->context->tf_s8;
   tf->tf_epc = curproc->context->tf_epc;
-  return tf;
 }
 
 proc* proc_copy(void)
@@ -444,7 +448,8 @@ proc* proc_copy(void)
   ret->pid = 0;
   //copy
   
-  ret->context = copy_context();
+  ret->context = kmalloc(sizeof(struct trapframe));
+  copy_context(ret->context);
   ret->parent = NULL;
   
   // Complete
@@ -474,6 +479,10 @@ proc* proc_copy(void)
     kfree(ret->p_name);
     kfree(ret);
   }
+  
+  ret->exit_lock = lock_create("copy lock");
+  ret->exit_cv = cv_create("copy cv");
+
   return ret;
 
 }

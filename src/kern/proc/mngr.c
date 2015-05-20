@@ -21,7 +21,7 @@ proc_mngr* proc_mngr_create(void)
   turns[kernel] = 10;
   turns[interactive] = 5;
   turns[background] = 1;
-  ret->ready_queue = multi_queue_create(turns, 2);
+  ret->ready_queue = multi_queue_create(turns, 3);
   KASSERT(ret->ready_queue != NULL);
 
   ret->free_ids = stack_create();
@@ -86,7 +86,6 @@ void proc_mngr_remove(proc_mngr *this, proc *p)
   int *to_push = kmalloc(sizeof(int));
   *to_push = p->pid;
   stack_push(this->free_ids, to_push);
-  proc_destroy(p);
 }
 
 struct thread* proc_mngr_get_thread(proc_mngr *this, proc *p)

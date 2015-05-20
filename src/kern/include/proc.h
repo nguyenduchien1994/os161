@@ -120,7 +120,7 @@ void set_state(proc *p, state s);
 
 void set_p_cwd(proc *p, struct vnode *new);
 
-struct trapframe* copy_context(void);
+void copy_context(struct trapframe *tf);
 
 /*
  * Global manager to handle all user processes. Maps user process to kernel thread
