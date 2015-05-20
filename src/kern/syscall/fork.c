@@ -57,13 +57,14 @@ int fork(pid_t *pret)
   child->context = kmalloc(sizeof(struct trapframe));
   copy_context(child->context);
 
-  int err = as_copy(curproc->p_addrspace, &child->p_addrspace);
-
+  int err;
+  as_copy(curproc->p_addrspace, &child->p_addrspace);
+  /*
   if(err){
     kprintf("Fork error - %d", err);
     return err;
   }
-  
+  */
   fork_params *fp = kmalloc(sizeof(struct fork_params));
   fp->pret = pret;
   fp->sem = sem_create("fork ret sem", 0);
