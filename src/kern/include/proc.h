@@ -79,7 +79,7 @@ typedef struct proc {
   pid_t pid;
   pc_t program_counter;
   state cur_state;
-  struct trap_frame *context;
+  struct trapframe *context;
   file_list *open_files;
   struct proc *parent;
   Linked_List *children;
@@ -107,12 +107,13 @@ typedef struct proc {
  */
 proc* proc_create(const char *name);
 void proc_destroy(struct proc *proc);
-proc* proc_copy(proc *p);
+proc* proc_copy(void);
 
 void set_state(proc *p, state s);
 
 void set_p_cwd(proc *p, struct vnode *new);
 
+struct trapframe* copy_context(void);
 
 /*
  * Global manager to handle all user processes. Maps user process to kernel thread
@@ -121,7 +122,7 @@ void set_p_cwd(proc *p, struct vnode *new);
 #define MAX_PROCESSES = 256
 
 typedef struct proc_mngr{
-  proc **usr_procs;//256 array
+  proc **procs;//256 array
   struct thread **threads;//256 array
   multi_queue *ready_queue;
   stack *free_ids;

@@ -390,6 +390,7 @@ file	  syscall/read.c
 file	  syscall/waitpid.c
 file	  syscall/getpid.c
 file 	  syscall/chdir.c
+file	  syscall/fork.c
 
 #
 # Startup and initialization

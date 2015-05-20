@@ -35,6 +35,7 @@
 #include <thread.h>
 #include <current.h>
 #include <syscall.h>
+#include <proc.h>
 
 
 /*
@@ -80,6 +81,7 @@ syscall(void *trapframe, unsigned long junk)
 {
   (void)junk;
   struct trapframe *tf = (struct trapframe*)trapframe;
+  curproc->context = tf;
   int callno;
   int32_t retval;
   int err;
@@ -137,7 +139,9 @@ syscall(void *trapframe, unsigned long junk)
 		(char **)tf->tf_a1);
     break;
 
-    //fork?
+  case SYS_fork:
+    err = fork(&retval);
+    break;
 
   case SYS___getcwd:
     err = __getcwd((char*)tf->tf_a0,
@@ -215,18 +219,4 @@ syscall(void *trapframe, unsigned long junk)
 	KASSERT(curthread->t_curspl == 0);
 	/* ...or leak any spinlocks */
 	KASSERT(curthread->t_iplhigh_count == 0);
-}
-
-/*
- * Enter user mode for a newly forked process.
- *
- * This function is provided as a reminder. You need to write
- * both it and the code that calls it.
- *
- * Thus, you can trash it and do things another way if you prefer.
- */
-void
-enter_forked_process(struct trapframe *tf)
-{
-	(void)tf;
 }
