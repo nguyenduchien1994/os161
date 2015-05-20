@@ -86,8 +86,8 @@ typedef struct proc {
   
   /* for waitpid and _exit */
   int exit_status;
-  struct lock exit_lock;
-  struct cv exit_cv;
+  struct lock *exit_lock;
+  struct cv *exit_cv;
   int wait_count;
   
   run_type rt;

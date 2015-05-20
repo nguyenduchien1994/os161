@@ -63,10 +63,6 @@ int open(const char *filename, int flags)
       return err;
     }
 
-    //    if (file->vn_data  == NULL && flags != O_CREAT)
-    //{
-    //return ENOENT;
-    //}
     open_file *openfile = open_file_create(file, 0, flags); 
   
     err = file_list_add(curproc->open_files, openfile);

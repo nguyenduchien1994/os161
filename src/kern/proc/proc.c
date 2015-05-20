@@ -104,6 +104,10 @@ proc_create(const char *name)
 	  kfree(proc->p_name);
 	  kfree(proc);
 	}
+
+	proc->exit_lock = lock_create("exit");
+	proc->exit_cv = cv_create("exit");
+
 	return proc;
 }
 
@@ -193,7 +197,10 @@ void proc_destroy(struct proc *proc)
 
 	threadarray_cleanup(&proc->p_threads);
 	spinlock_cleanup(&proc->p_lock);
-
+	
+	lock_destroy(curproc->exit_lock);
+	cv_destroy(curproc->exit_cv);
+	
 	kfree(proc->p_name);
 	kfree(proc);
 }
