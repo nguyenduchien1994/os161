@@ -21,7 +21,7 @@ int read(int fd, void *buf, size_t buflen, ssize_t *ret)
 
   if (buf == NULL)
   {
-    return EFAULT;
+    return EBADF;
   }
   
   int err = 0;
@@ -35,7 +35,7 @@ int read(int fd, void *buf, size_t buflen, ssize_t *ret)
   {
     if (to_read->flags & O_WRONLY)
     {
-       return EBADF;
+      return EBADF;
     } 
     else
     {
