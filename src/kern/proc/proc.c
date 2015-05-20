@@ -107,6 +107,12 @@ proc_create(const char *name)
 	}
 
 	proc->exit_lock = lock_create("exit");
+	if(proc->exit_lock == NULL){
+	  kfree(proc->children);
+	  kfree(proc->open_files);
+	  kfree(proc->p_name);
+	  kfree(proc);
+	}
 	proc->exit_cv = cv_create("exit");
 	return proc;
 }
@@ -473,6 +479,10 @@ proc* proc_copy(void)
     kfree(ret->p_name);
     kfree(ret);
   }
+  
+  ret->exit_lock = lock_create("copy lock");
+  ret->exit_cv = cv_create("copy cv");
+
   return ret;
 
 }
