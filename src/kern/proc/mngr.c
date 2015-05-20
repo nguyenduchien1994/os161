@@ -26,7 +26,7 @@ proc_mngr* proc_mngr_create(void)
 
   ret->free_ids = stack_create();
   int *to_push;
-  for(int i = 255; i <= 0; i--){
+  for(int i = 256; i >= 1; i--){
     to_push = kmalloc(sizeof(int));
     *to_push = i;
     stack_push(ret->free_ids, to_push);
@@ -58,6 +58,7 @@ int proc_mngr_add(proc_mngr *this, proc *p, struct thread *t)
   if(p != kproc){
     lock_acquire(this->glbl_lk);
   }
+
   pid_t pid;
   if(this->free_ids->first == NULL){
     pid = -1;

@@ -20,10 +20,25 @@ Linked_List *linkedlist_create(void)
 
     return ptr;
 }
+
+
+static void node_destroy(Linked_List_Node *n){
+  KASSERT(n != NULL);
+  if(n->next != NULL){
+    node_destroy(n->next);
+  }
+  kfree(n);
+}
+
+
 void linkedlist_destroy(Linked_List *list)
 {
   KASSERT(list != NULL);
-
+  
+  if(list->first != NULL){
+    node_destroy(list->first);
+  }
+  
   kfree(list -> lk);
   kfree(list);
 }
@@ -194,9 +209,16 @@ void * linkedlist_remove(Linked_List *list, int key){
       Linked_List_Node * node = list -> first;
       if (key == node->key)
       {
-	int * temp = kmalloc(sizeof(int));
-	data = linkedlist_remove_head(list,temp);
-	kfree(temp);
+	data = node -> data;
+	list -> first = node -> next;
+	
+	if (list -> first == NULL) 
+	  list -> last = NULL;
+	else 
+	  list -> first -> prev = NULL;
+
+	kfree(node);
+	list -> length --;
       }
       else
       {

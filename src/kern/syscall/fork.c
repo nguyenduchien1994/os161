@@ -52,11 +52,14 @@ int fork(pid_t *pret)
 {
   proc *child = proc_copy();
   
+  linkedlist_prepend(curproc->children, child);
   child->parent = curproc;
   child->context = copy_context();
 
   int err = as_copy(curproc->p_addrspace, &child->p_addrspace);
+
   if(err){
+    kprintf("Fork error - %d", err);
     return err;
   }
   
@@ -73,6 +76,7 @@ int fork(pid_t *pret)
 	      (void*)fp,
 	      0);
   if(err){
+    kprintf("Fork error - %d", err);
     return err;
   }
 
@@ -80,6 +84,7 @@ int fork(pid_t *pret)
   kfree(fp->sem);
   kfree(fp);
   if(*pret < 1){
+    kprintf("Too many processes? %d", *pret);
     return ENPROC;
   }
   return 0;

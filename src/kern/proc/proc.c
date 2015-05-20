@@ -190,16 +190,16 @@ void proc_destroy(struct proc *proc)
 		as_destroy(as);
 	}
 
-	
+
 	file_list_destroy(proc->open_files);
 	linkedlist_destroy(proc->children);
-	
 
-	threadarray_cleanup(&proc->p_threads);
 	spinlock_cleanup(&proc->p_lock);
 	
 	lock_destroy(curproc->exit_lock);
 	cv_destroy(curproc->exit_cv);
+
+	proc_mngr_remove(glbl_mngr, proc);
 	
 	kfree(proc->p_name);
 	kfree(proc);

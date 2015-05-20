@@ -98,10 +98,8 @@ runprogram(char *progname)
 		/* p_addrspace will go away when curproc is destroyed */
 		return result;
 	}
-	
-	if(glbl_mngr == NULL){
-	  glbl_mngr = proc_mngr_create();
-	}
+       
+	glbl_mngr = proc_mngr_create();
 	
 	struct vnode *console_node = kmalloc(sizeof(struct vnode));
     

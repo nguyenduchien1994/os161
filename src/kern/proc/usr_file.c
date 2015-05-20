@@ -75,8 +75,8 @@ file_list* file_list_create(void)
 void file_list_destroy(file_list *fl)
 {
   KASSERT(fl != NULL);
-  kfree(fl->files);
-  kfree(fl->available);
+  linkedlist_destroy(fl->files);
+  linkedlist_destroy(fl->available);
   kfree(fl);
 }
 /*
