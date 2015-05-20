@@ -55,7 +55,7 @@ int fork(pid_t *pret)
   child->parent = curproc;
   child->context = copy_context();
 
-  int err = as_copy(curproc->p_addrspace, &curproc->p_addrspace);
+  int err = as_copy(curproc->p_addrspace, &child->p_addrspace);
   if(err){
     return err;
   }

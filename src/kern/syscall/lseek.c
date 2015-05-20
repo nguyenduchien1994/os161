@@ -11,7 +11,7 @@
 
 int lseek(int fd, off_t pos, int whence, off_t *ret)
 {
-  if (fd < 0 || fd >= OPEN_MAX)
+  if (fd <= 2 || fd >= OPEN_MAX)
   {
     return EBADF;
   }
@@ -40,12 +40,10 @@ int lseek(int fd, off_t pos, int whence, off_t *ret)
     init = statbuf->st_size - pos;
     
   }else{
-    *ret = -1;
     return EINVAL;
   }
 
   if(init < 0){
-    *ret = -1;
     return EINVAL;
   }
 

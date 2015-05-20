@@ -370,6 +370,11 @@ void set_p_cwd(proc * p, struct vnode * new)
   vnode_incref(new);
 }
 
+void set_state(proc *p, state s)
+{
+  p->cur_state = s;
+}
+
 struct trapframe* copy_context(void){
   struct trapframe* tf = kmalloc(sizeof(struct trapframe));
   tf->tf_vaddr = curproc->context->tf_vaddr;
