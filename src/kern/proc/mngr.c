@@ -86,7 +86,6 @@ void proc_mngr_remove(proc_mngr *this, proc *p)
   int *to_push = kmalloc(sizeof(int));
   *to_push = p->pid;
   stack_push(this->free_ids, to_push);
-  proc_destroy(p);
 }
 
 struct thread* proc_mngr_get_thread(proc_mngr *this, proc *p)
