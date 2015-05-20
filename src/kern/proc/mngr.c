@@ -11,10 +11,10 @@ proc_mngr* proc_mngr_create(void)
   proc_mngr *ret = kmalloc(sizeof(proc_mngr));
   KASSERT(ret != NULL);
   
-  ret->procs = kmalloc(sizeof(proc*) * 256);
+  ret->procs = kmalloc(sizeof(proc*) * PID_MAX);
   KASSERT(ret->procs != NULL);
 
-  ret->threads = kmalloc(sizeof(struct thread*) * 256);
+  ret->threads = kmalloc(sizeof(struct thread*) * PID_MAX);
   KASSERT(ret->threads != NULL);
 
   int turns[3];
@@ -125,7 +125,11 @@ void proc_mngr_make_ready(proc_mngr *this, proc *p)
 proc* proc_mngr_get_from_pid(proc_mngr *this, pid_t pid)
 {
   KASSERT(this != NULL);
-  
+  if (pid < PID_MIN || pid > PID_MAX)
+  {
+    return NULL;
+  }
+
   proc *ret =  *(this->procs + pid*(sizeof(proc*)));
   
   return ret;
