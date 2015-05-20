@@ -63,7 +63,7 @@ void linkedlist_prepend(Linked_List *list, void *data)
 		Linked_List_Node * f = list -> first;
 		
 		if (list -> first == NULL) {
-			newnode = linkedlist_create_node(OPEN_MAX, data);
+			newnode = linkedlist_create_node(PID_MAX, data);
 			list -> first = newnode;
 			list -> last = newnode;
 		} else {

@@ -4,11 +4,13 @@
 #include <proc.h>
 #include <kern/errno.h>
 #include <usr_file.h>
+#include <limits.h>
 
 int waitpid(pid_t pid, int *status, int options, pid_t *ret)
 { 
   struct proc* myproc = proc_mngr_get_from_pid(glbl_mngr, pid);
- 
+  *ret = -1;
+  
   if(options != 0)
   {
     return EINVAL;
@@ -18,6 +20,19 @@ int waitpid(pid_t pid, int *status, int options, pid_t *ret)
     return ESRCH;
   }
   //include error check for status
+  else if (status == NULL)
+  {
+    return EFAULT;
+  }
+  else if (pid < PID_MIN)
+  {
+    return EINVAL;
+  }
+  else if (pid > PID_MAX)
+  {
+    return ESRCH;
+  }
+
   //set ret to ????
   int exitstatus;
   if(myproc != NULL || myproc->cur_state != dead)

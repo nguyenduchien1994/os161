@@ -4,7 +4,7 @@
 #include <thread.h>
 #include <linkedlist.h>
 #include <synch.h>
-
+#include <limits.h>
 
 proc_mngr* proc_mngr_create(void)
 {
