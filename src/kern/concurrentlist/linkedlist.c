@@ -28,7 +28,6 @@ void linkedlist_destroy(Linked_List *list)
   kfree(list);
 }
 
-
 Linked_List_Node *linkedlist_create_node(int key, void *data)
 {
     Linked_List_Node *newnode = kmalloc(sizeof(Linked_List_Node));

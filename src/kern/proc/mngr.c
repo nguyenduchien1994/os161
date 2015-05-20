@@ -121,3 +121,12 @@ void proc_mngr_make_ready(proc_mngr *this, proc *p)
   
   lock_release(this->glbl_lk);
 }
+
+proc* proc_mngr_get_from_pid(proc_mngr *this, pid_t pid)
+{
+  KASSERT(this != NULL);
+  
+  proc *ret =  *(this->procs + pid*(sizeof(proc*)));
+  
+  return ret;
+}
