@@ -6,6 +6,7 @@
 #include <machine/trapframe.h>
 #include <current.h>
 #include <addrspace.h>
+#include <mips/specialreg.h>
 
 typedef struct fork_params{
   pid_t *pret;
@@ -29,7 +30,7 @@ static void child_fork(void *params, unsigned long junk)
     linkedlist_remove(curproc->parent->children, runner->key);
     thread_exit();
   }
-  proc_mngr_make_ready(glbl_mngr, curproc);
+  //proc_mngr_make_ready(glbl_mngr, curproc);
 
   curproc->context->tf_epc += 4;
   curproc->context->tf_a3 = 0;
@@ -37,13 +38,11 @@ static void child_fork(void *params, unsigned long junk)
   
   as_activate();
   
-  struct trapframe *tf = copy_context();
-  if(tf == NULL){
-    
-    thread_exit();
-  }
+  struct trapframe tf;
+  copy_context(&tf);
+  tf.tf_status = CST_IRQMASK | CST_IEp | CST_KUp;
 
-  mips_usermode(tf);
+  mips_usermode(&tf);
 }
 
 
@@ -54,7 +53,9 @@ int fork(pid_t *pret)
   
   linkedlist_prepend(curproc->children, child);
   child->parent = curproc;
-  child->context = copy_context();
+  
+  child->context = kmalloc(sizeof(struct trapframe));
+  copy_context(child->context);
 
   int err = as_copy(curproc->p_addrspace, &child->p_addrspace);
 

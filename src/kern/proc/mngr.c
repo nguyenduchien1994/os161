@@ -21,7 +21,7 @@ proc_mngr* proc_mngr_create(void)
   turns[kernel] = 10;
   turns[interactive] = 5;
   turns[background] = 1;
-  ret->ready_queue = multi_queue_create(turns, 2);
+  ret->ready_queue = multi_queue_create(turns, 3);
   KASSERT(ret->ready_queue != NULL);
 
   ret->free_ids = stack_create();
