@@ -62,10 +62,8 @@ int fork(pid_t *pret)
     return ENOMEM;
   }
   copy_context(child->context);
-
   
   as_copy(curproc->p_addrspace, &child->p_addrspace);
-  
   fork_params *fp = kmalloc(sizeof(struct fork_params));
   if(fp == NULL){
     proc_destroy(child);
