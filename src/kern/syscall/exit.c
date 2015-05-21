@@ -27,6 +27,6 @@ void _exit(int exitcode)
     lock_acquire(curproc->exit_lock);
   }
   lock_release(curproc->exit_lock);
-  proc_destroy(curproc);
+
   thread_exit();
 }

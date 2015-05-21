@@ -99,8 +99,6 @@ runprogram(char *progname)
 		return result;
 	}
        
-	glbl_mngr = proc_mngr_create();
-	
 	struct vnode *console_node = kmalloc(sizeof(struct vnode));
     
 	int err = vfs_open((char*)"con:", O_RDWR, 0664, &console_node); 

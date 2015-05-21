@@ -19,6 +19,7 @@ struct Linked_List {
   Linked_List_Node *first;
   Linked_List_Node *last;
   int length;
+  int limit;
   struct lock * lk;
 };
 

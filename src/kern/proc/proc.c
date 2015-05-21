@@ -52,6 +52,7 @@
 #include <vfs.h>
 #include <kern/fcntl.h>
 #include <machine/trapframe.h>
+#include <test.h>
 
 /*
  * The process for the kernel; this holds all the kernel-only threads.
@@ -114,6 +115,14 @@ proc_create(const char *name)
 	  kfree(proc);
 	}
 	proc->exit_cv = cv_create("exit");
+	if(proc->exit_cv == NULL){
+	  kfree(proc->exit_lock);
+	  kfree(proc->children);
+	  kfree(proc->open_files);
+	  kfree(proc->p_name);
+	  kfree(proc);
+	}
+
 	return proc;
 }
 
@@ -203,9 +212,15 @@ void proc_destroy(struct proc *proc)
 	spinlock_cleanup(&proc->p_lock);
 	
 	lock_destroy(curproc->exit_lock);
-	cv_destroy(curproc->exit_cv);
+	//cv_destroy(curproc->exit_cv);
 
-	proc_mngr_remove(glbl_mngr, proc);
+	proc_mngr_remove(glbl_mngr, proc->pid);
+	
+	if(proc->parent == kproc){
+	  lock_acquire(menu_lock);
+	  cv_signal(menu_cv, menu_lock);
+	  lock_release(menu_lock);
+	}
 	
 	kfree(proc->p_name);
 	kfree(proc);
@@ -256,6 +271,10 @@ proc_create_runprogram(const char *name)
 		newproc->p_cwd = curproc->p_cwd;
 	}
 	spinlock_release(&curproc->p_lock);
+	
+	if(glbl_mngr == NULL){
+	  glbl_mngr = proc_mngr_create();
+	}
 
 	return newproc;
 }
@@ -308,21 +327,20 @@ proc_remthread(struct thread *t)
 	proc = t->t_proc;
 	KASSERT(proc != NULL);
 
-	spinlock_acquire(&proc->p_lock);
+	spl = splhigh();
 	/* ugh: find the thread in the array */
 	num = threadarray_num(&proc->p_threads);
 	for (i=0; i<num; i++) {
 		if (threadarray_get(&proc->p_threads, i) == t) {
 			threadarray_remove(&proc->p_threads, i);
-			spinlock_release(&proc->p_lock);
-			spl = splhigh();
+		       
 			t->t_proc = NULL;
 			splx(spl);
 			return;
 		}
 	}
 	/* Did not find it. */
-	spinlock_release(&proc->p_lock);
+	splx(spl);
 	panic("Thread (%p) has escaped from its process (%p)\n", t, proc);
 }
 

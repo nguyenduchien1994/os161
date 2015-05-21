@@ -56,59 +56,62 @@ Linked_List_Node *linkedlist_create_node(int key, void *data)
 
 void linkedlist_prepend(Linked_List *list, void *data)
 {
-	if (list != NULL) {
-		lock_acquire(list -> lk);
-
-		Linked_List_Node * newnode;
-		Linked_List_Node * f = list -> first;
-		
-		if (list -> first == NULL) {
-			newnode = linkedlist_create_node(OPEN_MAX, data);
-			list -> first = newnode;
-			list -> last = newnode;
-		} else {
-			newnode = linkedlist_create_node(f -> key - 1, data);
-			
-			newnode -> next = list -> first;
-			f -> prev = newnode;
-			list -> first = newnode;
-		}
-		
-		list -> length ++;
-		
-		lock_release(list -> lk);
-	}
+  if (list != NULL && (!list->limit || list->length < list->limit)) {
+    lock_acquire(list -> lk);
+    
+    Linked_List_Node * newnode;
+    Linked_List_Node * f = list -> first;
+    
+    if (list -> first == NULL) {
+      if(list->limit)
+	newnode = linkedlist_create_node(INT_MAX, data);
+      else
+	newnode = linkedlist_create_node(list->limit, data);
+      list -> first = newnode;
+      list -> last = newnode;
+    } else {
+      newnode = linkedlist_create_node(f -> key - 1, data);
+      
+      newnode -> next = list -> first;
+      f -> prev = newnode;
+      list -> first = newnode;
+    }
+    
+    list -> length ++;
+    
+    lock_release(list -> lk);
+  }
 }
 
 
 void linkedlist_printlist(Linked_List *list, int which)
 {
-	if (list != NULL)	{
-		lock_acquire(list -> lk); 
-
-		Linked_List_Node *runner = list -> first;
-		
-		kprintf("%d: ", which);
-		kprintf("(len = %d) ", list -> length);
-		
-		while (runner != NULL) {
-			kprintf("%d[%c] ", runner -> key, *((int *)runner -> data));
-			runner = runner -> next;
-		}
-		
-		kprintf("\n");
-		lock_release(list -> lk);
-	}
+  if (list != NULL){
+    lock_acquire(list -> lk); 
+    
+    Linked_List_Node *runner = list -> first;
+    
+    kprintf("%d: ", which);
+    kprintf("(len = %d) ", list -> length);
+    
+    while (runner != NULL) {
+      kprintf("%d[%c] ", runner -> key, *((int *)runner -> data));
+      runner = runner -> next;
+    }
+    
+    kprintf("\n");
+    lock_release(list -> lk);
+  }
 }
 
 
 
 void linkedlist_insert(Linked_List *list, int key, void *data) {
 
-  if (list != NULL) {
-		
-		lock_acquire(list -> lk); 
-
+  if (list != NULL && (!list->limit || list->length < list->limit)) {
+    
+    lock_acquire(list -> lk); 
+    
     Linked_List_Node *node = linkedlist_create_node(key, data);
     
     Linked_List_Node *curr = list -> first;
@@ -124,15 +127,15 @@ void linkedlist_insert(Linked_List *list, int key, void *data) {
       curr -> prev = node;
     } else {
       while (curr -> next != NULL && curr -> next -> key < key) {
-				curr = curr -> next;
+	curr = curr -> next;
       }
-
+      
       if (curr -> next == NULL) {
-				list -> last = node;
+	list -> last = node;
       } else {
-				curr -> next -> prev = node;
+	curr -> next -> prev = node;
       }
-			
+      
       node -> next = curr -> next;
       node -> prev = curr;
       // Test 5 - Yield so first thread's node at curr and curr ->
@@ -150,49 +153,43 @@ void linkedlist_insert(Linked_List *list, int key, void *data) {
     yield_if_should(6);
     list -> length = length;
 
-		lock_release(list -> lk);		
+    lock_release(list -> lk);		
   }
 
 }
 
 void * linkedlist_remove_head(Linked_List *list, int *key) {
-
-
-	void * data = NULL;
-	
-	if (list != NULL)	{
-
-		lock_acquire(list -> lk);
-
-		if (list -> first != NULL) {
-			
-			Linked_List_Node * node = list -> first;
-			data = node -> data;
-			if (key != NULL)
-				*key = node -> key;
-			
-			// Test 4 - Yield so both threads have the same node to remove.
-			yield_if_should(4);
-			list -> first = node -> next;
-			
-			if (list -> first == NULL) 
-				list -> last = NULL;
-			else 
-				list -> first -> prev = NULL;
+  void * data = NULL;
+  
+  if (list != NULL){
+    lock_acquire(list -> lk);
+    
+    if (list -> first != NULL) {
       
-			// Test 4 - Thread 2 - Error here on second deallocation of the same node.
-			kfree(node);  
-
-			list -> length --;
-
-		}
-	
-		lock_release(list -> lk);
-	}
-	
-
+      Linked_List_Node * node = list -> first;
+      data = node -> data;
+      if (key != NULL)
+	*key = node -> key;
+      
+      // Test 4 - Yield so both threads have the same node to remove.
+      yield_if_should(4);
+      list -> first = node -> next;
+      
+      if (list -> first == NULL) 
+	list -> last = NULL;
+      else 
+	list -> first -> prev = NULL;
+      
+      // Test 4 - Thread 2 - Error here on second deallocation of the same node.
+      kfree(node);  
+      
+      list -> length --;
+      
+    }
+    
+    lock_release(list -> lk);
+  }
   return data;
-
 }
 
 void * linkedlist_remove(Linked_List *list, int key){
@@ -252,26 +249,26 @@ void * linkedlist_remove(Linked_List *list, int key){
 
 void linkedlist_append(Linked_List *list, void *data)
 {
-	if (list != NULL) {
-		lock_acquire(list -> lk);
-
-		Linked_List_Node * newnode;
-		Linked_List_Node * f = list -> last;
-		
-		if (list -> last == NULL) {
-			newnode = linkedlist_create_node(0, data);
-			list -> last = newnode;
-			list -> first = newnode;
-		} else {
-			newnode = linkedlist_create_node(f -> key + 1, data);
-			
-			newnode -> prev = list -> last;
-			f -> next = newnode;
-			list -> last = newnode;
-		}
-		
-		list -> length ++;
-		
-		lock_release(list -> lk);
-	}
+  if (list != NULL && (!list->limit || list->length < list->limit)) {
+    lock_acquire(list -> lk);
+    
+    Linked_List_Node * newnode;
+    Linked_List_Node * f = list -> last;
+    
+    if (list -> last == NULL) {
+      newnode = linkedlist_create_node(0, data);
+      list -> last = newnode;
+      list -> first = newnode;
+    } else {
+      newnode = linkedlist_create_node(f -> key + 1, data);
+      
+      newnode -> prev = list -> last;
+      f -> next = newnode;
+      list -> last = newnode;
+    }
+    
+    list -> length ++;
+    
+    lock_release(list -> lk);
+  }
 }
