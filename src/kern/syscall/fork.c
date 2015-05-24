@@ -20,7 +20,6 @@ static void child_fork(void *params, unsigned long junk)
   //give return back to parent
   pid_t pid = proc_mngr_add(glbl_mngr, curproc, curthread);
   *(((fork_params*)params)->pret) = pid;
-  V(((fork_params*)params)->sem);
   if(pid < 1){
     Linked_List_Node *runner = curproc->parent->children->first;
     while(runner->data != curproc){
@@ -31,6 +30,8 @@ static void child_fork(void *params, unsigned long junk)
     thread_exit();
   }
   //proc_mngr_make_ready(glbl_mngr, curproc);
+
+  V(((fork_params*)params)->sem);  
 
   curproc->context->tf_epc += 4;
   curproc->context->tf_a3 = 0;
@@ -50,42 +51,45 @@ static void child_fork(void *params, unsigned long junk)
 int fork(pid_t *pret)
 {
   proc *child = proc_copy();
-  
+  int err = 0;
+
   linkedlist_prepend(curproc->children, child);
   child->parent = curproc;
   
   child->context = kmalloc(sizeof(struct trapframe));
-  copy_context(child->context);
-
-  int err = as_copy(curproc->p_addrspace, &child->p_addrspace);
-
-  if(err){
-    kprintf("Fork error - %d", err);
-    return err;
+  if(child->context == NULL){
+    proc_destroy(child);
+    return ENOMEM;
   }
+  copy_context(child->context);
   
+  as_copy(curproc->p_addrspace, &child->p_addrspace);
   fork_params *fp = kmalloc(sizeof(struct fork_params));
+  if(fp == NULL){
+    proc_destroy(child);
+    return ENOMEM;
+  }
+
   fp->pret = pret;
   fp->sem = sem_create("fork ret sem", 0);
   if(fp->sem == NULL){
+    proc_destroy(child);
     return ENOMEM;
   }
   
   err = thread_fork("usr_spawn",
-	      child,
-	      child_fork,
-	      (void*)fp,
-	      0);
+		    child,
+		    child_fork,
+		    (void*)fp,
+		    0);
   if(err){
-    kprintf("Fork error - %d", err);
     return err;
   }
 
   P(fp->sem);
   kfree(fp->sem);
   kfree(fp);
-  if(*pret < 1){
-    kprintf("Too many processes? %d", *pret);
+  if(*pret < 0){
     return ENPROC;
   }
   return 0;

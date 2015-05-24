@@ -46,6 +46,7 @@
 #include "opt-concurrent_list.h"
 #include "opt-shared_buffer.h"
 #include <synch.h>
+#include <current.h>
 
 /*
  * In-kernel menu and command dispatcher.
@@ -83,6 +84,8 @@ cmd_progthread(void *ptr, unsigned long nargs)
 	if (nargs > 2) {
 		kprintf("Warning: argument passing from menu not supported\n");
 	}
+	
+	proc_mngr_add(glbl_mngr, curproc, curthread);
 
 	/* Hope we fit. */
 	KASSERT(strlen(args[0]) < sizeof(progname));
@@ -123,6 +126,7 @@ common_prog(int nargs, char **args)
 	if (proc == NULL) {
 		return ENOMEM;
 	}
+	proc->parent = curproc;
 
 	result = thread_fork(args[0] /* thread name */,
 			proc /* new process */,
@@ -130,7 +134,6 @@ common_prog(int nargs, char **args)
 			args /* thread arg */, nargs /* thread arg */);
 	if (result) {
 		kprintf("thread_fork failed: %s\n", strerror(result));
-		proc_destroy(proc);
 		return result;
 	}
 
@@ -717,6 +720,8 @@ void
 menu(char *args)
 {
 	char buf[64];
+	
+	glbl_mngr = NULL;
 	
 	menu_lock = lock_create("menu");
 	menu_cv = cv_create("menu");

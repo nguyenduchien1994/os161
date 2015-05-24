@@ -64,11 +64,13 @@ file_list* file_list_create(void)
     kfree(ret);
     return NULL;
   }
+  ret->files->limit = OPEN_MAX;
   ret->available = stack_create();
   if(ret->available == NULL){
     kfree(ret->files);
     return NULL;
   }
+  ret->available->limit = OPEN_MAX;
   return ret;
 }
 

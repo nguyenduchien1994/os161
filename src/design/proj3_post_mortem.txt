@@ -1,0 +1,16 @@
+syscalls ratings:
+open: 4 (Julia)
+read: 4 (Tristan, Hien)
+write: 4 (Tristan)
+lseek: 4 (Tristan)
+close: 4 (Hien, Tristan)
+dup2: 4 (Hien, Tristan)
+chdir: 5 (Julia, Tristan)
+__getcwd: 5 (Tristan)
+getpid: 5 (Julia)
+fork: 4 (Tristan)
+execv: 3 (Julia)
+waitpid: 3 (Tristan, Julia, Hien)
+_exit: 3 (Tristan, Julia, Hien)
+
+(Julia change anything you don't agree with and let me know)

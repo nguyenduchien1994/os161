@@ -522,6 +522,7 @@ thread_fork(const char *name,
 	if (proc == NULL) {
 		proc = curthread->t_proc;
 	}
+
 	result = proc_addthread(proc, newthread);
 	if (result) {
 		/* thread_destroy will clean up the stack */
@@ -775,21 +776,13 @@ thread_startup(void (*entrypoint)(void *data1, unsigned long data2),
  */
 void
 thread_exit(void)
-{
-  if(curproc->parent == kproc){
-    lock_acquire(menu_lock);
-    cv_signal(menu_cv, menu_lock);
-    lock_release(menu_lock);
-  }
- 
- struct thread *cur;
+{ 
+  struct thread *cur;
   
   cur = curthread;
   
-  /*
-   * Detach from our process. You might need to move this action
-   * around, depending on how your wait/exit works.
-   */
+  pid_t pid = curproc->pid; 
+  
   proc_remthread(cur);
 
   /* Make sure we *are* detached (move this only if you're sure!) */
@@ -800,6 +793,9 @@ thread_exit(void)
   
   /* Interrupts off on this processor */
   splhigh();
+  if(curproc != kproc){
+    proc_destroy(proc_mngr_get_from_pid(glbl_mngr, pid));
+  }
   thread_switch(S_ZOMBIE, NULL, NULL);
   panic("braaaaaaaiiiiiiiiiiinssssss\n");
 }

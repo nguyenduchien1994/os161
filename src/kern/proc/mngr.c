@@ -12,9 +12,17 @@ proc_mngr* proc_mngr_create(void)
   KASSERT(ret != NULL);
   
   ret->procs = kmalloc(sizeof(proc*) * PID_MAX);
+  ret->next_pid = 2;
+
+  //  ret->procs = kmalloc(sizeof(proc*) * 32767);
+
   KASSERT(ret->procs != NULL);
+  for(int i = 2; i < 32768; i++){
+    *(ret->procs + i*(sizeof(proc*))) = NULL;
+  }
 
   ret->threads = kmalloc(sizeof(struct thread*) * PID_MAX);
+  //  ret->threads = kmalloc(sizeof(struct thread*) * 32767);
   KASSERT(ret->threads != NULL);
 
   int turns[3];
@@ -25,14 +33,9 @@ proc_mngr* proc_mngr_create(void)
   KASSERT(ret->ready_queue != NULL);
 
   ret->free_ids = stack_create();
-  int *to_push;
-  for(int i = 256; i >= 1; i--){
-    to_push = kmalloc(sizeof(int));
-    *to_push = i;
-    stack_push(ret->free_ids, to_push);
-  }
   KASSERT(ret->free_ids != NULL);
-
+  ret->free_ids->limit = PID_MAX-1;
+  
   ret->glbl_lk = lock_create("proc lock");
   KASSERT(ret->glbl_lk != NULL);
   
@@ -61,7 +64,14 @@ int proc_mngr_add(proc_mngr *this, proc *p, struct thread *t)
 
   pid_t pid;
   if(this->free_ids->first == NULL){
-    pid = -1;
+    if(this->next_pid <= 32767){
+      pid = this->next_pid++;
+      *(this->procs + pid*(sizeof(proc*))) = p;
+      *(this->threads + pid*(sizeof(struct thread*))) = t;
+    }
+    else{
+      return -1;
+    }
   }
   else{
     pid = *((pid_t*)stack_pop(this->free_ids));
@@ -78,13 +88,12 @@ int proc_mngr_add(proc_mngr *this, proc *p, struct thread *t)
   return pid;
 }
 
-void proc_mngr_remove(proc_mngr *this, proc *p)
+void proc_mngr_remove(proc_mngr *this, pid_t pid)
 {
-  KASSERT(p != NULL);
-  KASSERT(p->cur_state != ready);
+  *(this->procs + pid*(sizeof(proc*))) = NULL;
   
   int *to_push = kmalloc(sizeof(int));
-  *to_push = p->pid;
+  *to_push = pid;
   stack_push(this->free_ids, to_push);
 }
 
@@ -125,11 +134,12 @@ void proc_mngr_make_ready(proc_mngr *this, proc *p)
 proc* proc_mngr_get_from_pid(proc_mngr *this, pid_t pid)
 {
   KASSERT(this != NULL);
-  if (pid < PID_MIN || pid > PID_MAX)
+
+  if (pid < PID_MIN || pid > (int)PID_MAX)
   {
     return NULL;
   }
-
+  
   proc *ret =  *(this->procs + pid*(sizeof(proc*)));
   
   return ret;
