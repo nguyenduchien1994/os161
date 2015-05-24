@@ -9,8 +9,42 @@ chdir: 5 (Julia, Tristan)
 __getcwd: 5 (Tristan)
 getpid: 5 (Julia)
 fork: 4 (Tristan)
+   It works expect for some minor errors with the background managers. 
 execv: 3 (Julia)
-waitpid: 3 (Tristan, Julia, Hien)
-_exit: 3 (Tristan, Julia, Hien)
+  Questions: What are good tests for execv? What are the boarder line cases for execv? 
+  We are just debugging, right now it is hard to debug because other syscalls fall. To approach completing the implemenation is to fix the other syscalls and then running tests and debugging the syscall.   
+waitpid: 4 (Tristan, Julia, Hien)
+  It panics when runs, it is a minor error with the background managers. 
+_exit: 4 (Tristan, Julia, Hien)
+  It panics when runs, it is a minor error with the background managers.
 
-(Julia change anything you don't agree with and let me know)
+Team Member Questions
+Tristan:
+
+Hien:
+
+Julia:
+The subsystems of OS/161 I learned more about while working on the project are
+One thing I widhed I knew about os/161 that I haven't figured out is
+The difficulties i encountered while implementing the project was
+
+Teamwork:
+Our teamwork was good, we worked well together as a group. Although we worked well together, it would have been nice if we worked more independently.  We collaborated effectively using git.
+
+Design Document Reflection:
+Interacting with the file system was harder than we thought it was going to be.Creating data structures, interacting with user space (using copyin/out)  was easier than we thought it was going to be.
+
+Our design changed with fork and the interface with the interaction with kern space and user space. Fork changed because we thought there was going to have to manually change the fork thread instead of using built in functions. The interface changed due to how syscall.c worked.
+
+Differences in Completion
+Desgin:
+Look at scheduling more indepth and really hash out what is happening. This way we can have better design implementation. We are also edit our waitpid and exit to use semaphores instead of the counter. 
+
+Group Dynamic:
+For finishing us syscall funcations, we will debug independently, but have a lot of communication when a shared file it changed. 
+ 
+Workflow:
+We will try to spread the work out more evenly through out the remaining time left on the work. This is  in order to not have a lot of implementation to complete in the rest of the project, as well as have more time to fix any road blocks we have. 
+
+Timeline:
+By Wednesday we want to have all of our syscalls done. This way we will have a full week and a half to implement scheduling. 
