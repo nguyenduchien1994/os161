@@ -20,13 +20,20 @@ _exit: 4 (Tristan, Julia, Hien)
 
 Team Member Questions
 Tristan:
+1. I learned a great deal about the file system interface and where it is implemented, the threading system, and the interaction with userspace.
+2. I would like to learn more about the direct implementation of the scheduling system and how it integrates with the rest of the structures. I will need this to implement scheduling.
+3. First, we did not know where to start, and had trouble trawling through thousands of lines of essentially undocumented code to figure out where even to begin. Once we had read enough to start, it was difficult to do as a group since there were so many interlocking components, everyone needed to fully understand every implementation. Finally, we had trouble with debugging for the same reason.
 
 Hien:
+1. While working on this project, I learned a lot more about OS161 user/kernel space and process subsystems. I also learn how to use the debugger gdb system more efficiently and it really helps in term of understanding out implementation and figuring out what goes right and wrong. 
+2. I wish I could know more about the file system, virtual file system and virtual memory to understand how they are implemented and behaved in OS161.
+3. The biggest difficulty that I encountered working in this project is being able to understand the already implemented features of OS161. In order to work on the syscalls implementation, I had to read through many different files, tried to figure out what features are relevant and what are not, and decided on which functions to be used. Another difficulty is the design of the global process manager which function is to keep track and manage the processes. It is also chanllenging to understand the communication between the processes and the file system as we didn't really do any work on the file system itself.           
+
 
 Julia:
-The subsystems of OS/161 I learned more about while working on the project are
-One thing I widhed I knew about os/161 that I haven't figured out is
-The difficulties i encountered while implementing the project was
+1. The subsystems of OS/161 I learned more about while working on the project are the file system, as well as the  global management. I also got a complete understanding of everything that the PCB takes care of. 
+2. One thing I wish I knew about os/161 that I haven't figured out is how the user space and virtual memory really work and fully understanding them. 
+3. The difficulties I encountered while implementing the project was understanding how all the parts of the operating system work together and function. Another difficulty was figuring out what was already implemented within OS/161 and understanding what each of those parts did and how they worked. I also found that understanding how the virual memory and global manager to be very difficult.  
 
 Teamwork:
 Our teamwork was good, we worked well together as a group. Although we worked well together, it would have been nice if we worked more independently.  We collaborated effectively using git.

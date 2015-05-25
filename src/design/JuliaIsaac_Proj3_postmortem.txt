@@ -1,7 +1,0 @@
-3 Indiviual questions
-
-1. The subsystems of OS/161 I learned more about while working on the project are the file system, as well as the  global management. I also got a complete understanding of everything that the PCB takes care of. 
-
-2. One thing I wish I knew about os/161 that I haven't figured out is how the user space and virtual memory really work and fully understanding them. 
-
-3. The difficulties I encountered while implementing the project was understanding how all the parts of the operating system work together and function. Another difficulty was figuring out what was already implemented within OS/161 and understanding what each of those parts did and how they worked. I also found that understanding how the virual memory and global manager to be very difficult.  
