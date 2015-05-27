@@ -142,7 +142,7 @@ void proc_destroy(struct proc *proc)
 	 * do, some don't.
 	 */
 
-	KASSERT(proc != NULL);
+        KASSERT(proc != NULL);
 	KASSERT(proc != kproc);
 
 	/*
