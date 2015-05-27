@@ -134,6 +134,8 @@ proc_create(const char *name)
  */
 void proc_destroy(struct proc *proc)
 {
+  lock_acquire(glbl_mngr->glbl_lk);
+  
 	/*
 	 * You probably want to destroy and null out much of the
 	 * process (particularly the address space) at exit time if
@@ -211,7 +213,7 @@ void proc_destroy(struct proc *proc)
 
 	spinlock_cleanup(&proc->p_lock);
 	
-	lock_destroy(curproc->exit_lock);
+	//lock_destroy(curproc->exit_lock);
 	//cv_destroy(curproc->exit_cv);
 
 	proc_mngr_remove(glbl_mngr, proc->pid);
@@ -224,6 +226,8 @@ void proc_destroy(struct proc *proc)
 	
 	kfree(proc->p_name);
 	kfree(proc);
+	
+	lock_release(glbl_mngr->glbl_lk);
 }
 
 /*
@@ -275,6 +279,38 @@ proc_create_runprogram(const char *name)
 	if(glbl_mngr == NULL){
 	  glbl_mngr = proc_mngr_create();
 	}
+
+	if (kproc != NULL && kproc->open_files->files->first == NULL) {  
+	  struct vnode *console_node = kmalloc(sizeof(struct vnode));
+	  
+	  int err = vfs_open((char*)"con:", O_RDWR, 0664, &console_node); 
+	  
+	  if (err)
+	    {
+	      panic("Could not access console....Users are deaf and mute...");
+	    }
+	  
+	  open_file *openfile = open_file_create(console_node, 0, O_RDONLY);
+	  file_list_add(kproc->open_files, openfile); //making STD_IN = 0
+	  
+	  openfile = open_file_create(console_node, 0, O_WRONLY); 
+	  file_list_add(kproc->open_files, openfile); //making STD_OUT = 1
+	  file_list_add(kproc->open_files, openfile); //making STD_ERR = 2
+	}
+
+	Linked_List_Node *runner = kproc->open_files->files->last;
+	while(runner != NULL){
+	  open_file_incref((open_file*)runner->data);
+	  linkedlist_insert(newproc->open_files->files, runner->key, runner->data);
+	  runner = runner->prev;
+	}
+	
+	runner = kproc->open_files->available->last;
+	while(runner != NULL){
+	  linkedlist_insert(newproc->open_files->available, runner->key, runner->data);
+	  runner = runner->prev;
+	}
+
 
 	return newproc;
 }
@@ -461,7 +497,7 @@ proc* proc_copy(void)
   /* VFS fields */
   ret->p_cwd = curproc->p_cwd;
   
-	
+  
   
   ret->pid = 0;
   //copy
@@ -479,16 +515,17 @@ proc* proc_copy(void)
     kfree(ret);
   }
 
-  Linked_List_Node *runner = curproc->open_files->files->first;
+  Linked_List_Node *runner = curproc->open_files->files->last;
   while(runner != NULL){
+    open_file_incref((open_file*)runner->data);
     linkedlist_insert(ret->open_files->files, runner->key, runner->data);
-    runner = runner->next;
+    runner = runner->prev;
   }
 
-  runner = curproc->open_files->available->first;
+  runner = curproc->open_files->available->last;
   while(runner != NULL){
     linkedlist_insert(ret->open_files->available, runner->key, runner->data);
-    runner = runner->next;
+    runner = runner->prev;
   }
   
   ret->children = linkedlist_create();
