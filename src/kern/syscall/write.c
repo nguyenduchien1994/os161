@@ -24,24 +24,24 @@ int write(int fd, const void *buf, size_t nbytes, ssize_t *ret)
     }
     else{
       lock_acquire(f->file_lk);
-      struct uio *write_uio = kmalloc(sizeof(struct uio));
+      struct uio write_uio;
       struct iovec iov;
       uio_kinit(&iov, 
-		write_uio, 
+		&write_uio, 
 		(void*)buf, 
 		nbytes, 
 		f->offset, 
 		UIO_WRITE);
-      write_uio->uio_segflg = UIO_USERSPACE;
-      write_uio->uio_space = curproc->p_addrspace;
-      write_uio->uio_resid = nbytes;
+      write_uio.uio_segflg = UIO_USERSPACE;
+      write_uio.uio_space = curproc->p_addrspace;
+      write_uio.uio_resid = nbytes;
       
-      while(!err && write_uio->uio_resid)
+      while(!err && write_uio.uio_resid)
       {  
-	err = f->vfile->vn_ops->vop_write(f->vfile, write_uio);
+	err = f->vfile->vn_ops->vop_write(f->vfile, &write_uio);
 	
-	*ret = nbytes - write_uio->uio_resid;
-	f->offset = write_uio->uio_offset;
+	*ret = nbytes - write_uio.uio_resid;
+	f->offset = write_uio.uio_offset;
       }
       lock_release(f->file_lk);
     }

@@ -9,7 +9,6 @@
 int waitpid(pid_t pid, int *status, int options, pid_t *ret)
 { 
   struct proc* myproc = proc_mngr_get_from_pid(glbl_mngr, pid);
-  *ret = -1;
   
   if(options != 0)
   {

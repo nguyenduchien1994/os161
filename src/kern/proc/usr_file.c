@@ -101,7 +101,7 @@ int file_list_add(file_list *fl, open_file *of)
     ret =  *( (int*) stack_pop(fl -> available) );
     linkedlist_insert(fl -> files, ret, of);
   }
-  
+  open_file_incref(of);
   return ret;
 }
 
@@ -173,8 +173,9 @@ int file_list_insert(file_list *fl, open_file *of, int fd)
 	open_file_decref((open_file*)node -> data);
 	node -> data = of;
       }
-      open_file_incref(of);
+     
     }
+    open_file_incref(of);
     return 0;
   }
 }

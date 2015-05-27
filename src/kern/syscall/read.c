@@ -40,20 +40,20 @@ int read(int fd, void *buf, size_t buflen, ssize_t *ret)
     else
     {
       lock_acquire(to_read->file_lk);
-      struct uio *read_uio = kmalloc(sizeof(struct uio));
+      struct uio read_uio;
       struct iovec iov;
 
-      uio_kinit(&iov,read_uio,(void*)buf,buflen,to_read->offset,UIO_READ);
+      uio_kinit(&iov,&read_uio,(void*)buf,buflen,to_read->offset,UIO_READ);
 
-      read_uio->uio_segflg = UIO_USERSPACE;
-      read_uio->uio_space = curproc->p_addrspace;
-      read_uio->uio_resid = buflen;
+      read_uio.uio_segflg = UIO_USERSPACE;
+      read_uio.uio_space = curproc->p_addrspace;
+      read_uio.uio_resid = buflen;
       
-      while (!err && read_uio->uio_resid)
+      while (!err && read_uio.uio_resid)
       {
-	err = to_read->vfile->vn_ops->vop_read(to_read->vfile,read_uio);
-	*ret = buflen - read_uio->uio_resid;
-	to_read->offset = read_uio->uio_offset; 
+	err = to_read->vfile->vn_ops->vop_read(to_read->vfile,&read_uio);
+	*ret = buflen - read_uio.uio_resid;
+	to_read->offset = read_uio.uio_offset; 
       }
       lock_release(to_read->file_lk);
     }
