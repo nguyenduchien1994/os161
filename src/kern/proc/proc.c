@@ -122,6 +122,15 @@ proc_create(const char *name)
 	  kfree(proc->p_name);
 	  kfree(proc);
 	}
+	proc->exit_sem = sem_create("exit", 1);
+	if(proc->exit_sem == NULL){
+	  kfree(proc->exit_cv);
+	  kfree(proc->exit_lock);
+	  kfree(proc->children);
+	  kfree(proc->open_files);
+	  kfree(proc->p_name);
+	  kfree(proc);
+	}
 
 	return proc;
 }
@@ -215,6 +224,7 @@ void proc_destroy(struct proc *proc)
 	
 	//lock_destroy(curproc->exit_lock);
 	//cv_destroy(curproc->exit_cv);
+	//sem_destroy(curproc->exit_sem);
 
 	proc_mngr_remove(glbl_mngr, proc->pid);
 	
@@ -492,9 +502,12 @@ proc* proc_copy(void)
   spinlock_init(&ret->p_lock);
   
   /* VM fields */
-  ret->p_addrspace = curproc->p_addrspace;
+  ret->p_addrspace = NULL;
   
   /* VFS fields */
+  if(curproc->p_cwd){
+    VOP_INCREF(curproc->p_cwd);  
+  }
   ret->p_cwd = curproc->p_cwd;
   
   
@@ -503,6 +516,10 @@ proc* proc_copy(void)
   //copy
   
   ret->context = kmalloc(sizeof(struct trapframe));
+  if(ret->context == NULL){
+    kfree(ret->p_name);
+    kfree(ret);
+  }
   copy_context(ret->context);
   ret->parent = NULL;
   
@@ -535,8 +552,31 @@ proc* proc_copy(void)
     kfree(ret);
   }
   
-  ret->exit_lock = lock_create("copy lock");
-  ret->exit_cv = cv_create("copy cv");
+  ret->exit_lock = lock_create("exit");
+  if(ret->exit_lock == NULL){
+    kfree(ret->children);
+    kfree(ret->open_files);
+    kfree(ret->p_name);
+    kfree(ret);
+  }
+  ret->exit_cv = cv_create("exit");
+  if(ret->exit_cv == NULL){
+    kfree(ret->exit_lock);
+    kfree(ret->children);
+    kfree(ret->open_files);
+    kfree(ret->p_name);
+    kfree(ret);
+  }  
+
+  ret->exit_sem = sem_create("exit", 1);
+  if(ret->exit_lock == NULL){
+    kfree(ret->exit_cv);
+    kfree(ret->exit_lock);
+    kfree(ret->children);
+    kfree(ret->open_files);
+    kfree(ret->p_name);
+    kfree(ret);
+  }
 
   return ret;
 

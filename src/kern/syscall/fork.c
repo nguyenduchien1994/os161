@@ -7,6 +7,7 @@
 #include <current.h>
 #include <addrspace.h>
 #include <mips/specialreg.h>
+#include <vnode.h>
 
 typedef struct fork_params{
   pid_t *pret;
@@ -46,34 +47,71 @@ static void child_fork(void *params, unsigned long junk)
   mips_usermode(&tf);
 }
 
+static void new_proc_destroy(proc *proc)
+{
+    if (proc->p_cwd) {
+      VOP_DECREF(proc->p_cwd);
+      proc->p_cwd = NULL;
+    }
+    
+    /* VM fields */
+    if (proc->p_addrspace) {
+      struct addrspace *as;
+      as = proc->p_addrspace;
+      proc->p_addrspace = NULL;
+      as_destroy(as);
+    }
+    
+    
+    file_list_destroy(proc->open_files);
+    linkedlist_destroy(proc->children);
+    
+    spinlock_cleanup(&proc->p_lock);
+    
+    //lock_destroy(curproc->exit_lock);
+    //cv_destroy(curproc->exit_cv);
+    
+    kfree(proc->p_name);
+    kfree(proc);
+}
 
 //ret 0 for child, pid of child for parent
 int fork(pid_t *pret)
 {
   proc *child = proc_copy();
   int err = 0;
+  if(child == NULL){
+    return ENOMEM;
+  }
 
   linkedlist_prepend(curproc->children, child);
   child->parent = curproc;
   
   child->context = kmalloc(sizeof(struct trapframe));
   if(child->context == NULL){
-    proc_destroy(child);
+    new_proc_destroy(child);
     return ENOMEM;
   }
   copy_context(child->context);
   
-  as_copy(curproc->p_addrspace, &child->p_addrspace);
+  err = as_copy(curproc->p_addrspace, &child->p_addrspace);
+  
+  if(err){
+    new_proc_destroy(child);
+    return err;
+  }
+
   fork_params *fp = kmalloc(sizeof(struct fork_params));
   if(fp == NULL){
-    proc_destroy(child);
+    new_proc_destroy(child);
     return ENOMEM;
   }
 
   fp->pret = pret;
   fp->sem = sem_create("fork ret sem", 0);
   if(fp->sem == NULL){
-    proc_destroy(child);
+    kfree(fp);
+    new_proc_destroy(child);
     return ENOMEM;
   }
   
