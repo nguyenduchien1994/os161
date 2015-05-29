@@ -32,20 +32,24 @@ int waitpid(pid_t pid, int *status, int options, pid_t *ret)
     return ESRCH;
   }
 
+  
+
   //set ret to ????
   int exitstatus;
   if(myproc != NULL || myproc->cur_state != dead)
   {
     lock_acquire(myproc->exit_lock);
-    myproc->wait_count ++;
+    myproc->exit_sem->sem_count--;
     set_state(myproc, waiting);
     cv_wait(myproc->exit_cv, myproc->exit_lock);
+
     exitstatus = myproc->exit_status;
-    myproc->wait_count --;
+    V(myproc->exit_sem);
+
     lock_release(myproc->exit_lock);
   }
   *status = exitstatus;
- 
+
   //(void)status;
   //(void)options;
   *ret = pid; 

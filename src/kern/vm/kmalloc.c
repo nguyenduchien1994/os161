@@ -594,7 +594,7 @@ checksubpages(void)
 	}
 
 	for (pr = allbase; pr != NULL; pr = pr->next_all) {
-		checksubpage(pr);
+		checksubpage
 		KASSERT(ac < TOTAL_PAGEREFS);
 		ac++;
 	}
