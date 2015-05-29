@@ -9,6 +9,9 @@
 Linked_List *linkedlist_create(void)
 {
     Linked_List * ptr = kmalloc(sizeof(Linked_List));
+    if(ptr == NULL){
+      return NULL;
+    }
     ptr -> length = 0;
     ptr -> first = NULL;
     ptr -> last = NULL;
@@ -160,7 +163,7 @@ void linkedlist_insert(Linked_List *list, int key, void *data) {
 }
 
 void * linkedlist_remove_head(Linked_List *list, int *key) {
-  void * data = NULL;
+  void *data = NULL;
   
   if (list != NULL){
     lock_acquire(list -> lk);
@@ -214,9 +217,6 @@ void * linkedlist_remove(Linked_List *list, int key){
 	  list -> last = NULL;
 	else 
 	  list -> first -> prev = NULL;
-
-	kfree(node);
-	list -> length --;
       }
       else
       {
@@ -237,9 +237,9 @@ void * linkedlist_remove(Linked_List *list, int key){
 	    node -> next -> prev = node -> prev;
 	  }
 	  data = node->data;
-	  kfree(node);
-	  list -> length--;
 	}
+	kfree(node);
+	list -> length --;
       }
     }
     lock_release(list -> lk);
