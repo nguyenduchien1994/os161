@@ -22,6 +22,6 @@ void stack_push(stack *s, void *data)
 
 void* stack_pop(stack *s)
 {
-  int * key = &s->first->key;
-  return linkedlist_remove_head(s,key);
+  unsigned key;
+  return linkedlist_remove_head(s,&key);
 }

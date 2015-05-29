@@ -90,7 +90,7 @@ static void linkedlist_test_insert(void * list, unsigned long which){
 
 static void linkedlist_test_remove(void * list, unsigned long which){
 
-  int key;
+  unsigned key;
   int *data = linkedlist_remove_head(list,&key);
 
   if (which == 2) {
@@ -108,7 +108,7 @@ static int sequential_test(void) {
   Linked_List * list = linkedlist_create();
   int failed = 0;
   
-  int key = -1;
+  unsigned key = 100;
   int * data = linkedlist_remove_head(list, &key);
   
   if (data != NULL) {
@@ -143,7 +143,7 @@ static int sequential_test(void) {
     data = linkedlist_remove_head(list, &key);
     int target_key = -9 + i * 2 - (i >= 5 ? 1 : 0);
     int target_data = 'A' + (target_key >= 0 ? target_key : -target_key);
-    if (key != target_key || *data != target_data) {
+    if (key != (unsigned)target_key || *data != target_data) {
       kprintf("TEST FAILURE: %d[%c] != %d[%c]\n",
 	      target_key,target_data,key,*data);
       failed = -1;

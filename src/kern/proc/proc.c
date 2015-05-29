@@ -222,17 +222,11 @@ void proc_destroy(struct proc *proc)
 
 	spinlock_cleanup(&proc->p_lock);
 	
-	//lock_destroy(curproc->exit_lock);
-	//cv_destroy(curproc->exit_cv);
-	//sem_destroy(curproc->exit_sem);
+	lock_destroy(proc->exit_lock);
+	cv_destroy(proc->exit_cv);
+	sem_destroy(proc->exit_sem);
 
 	proc_mngr_remove(glbl_mngr, proc->pid);
-	
-	if(proc->parent == kproc){
-	  lock_acquire(menu_lock);
-	  cv_signal(menu_cv, menu_lock);
-	  lock_release(menu_lock);
-	}
 	
 	kfree(proc->p_name);
 	kfree(proc);
@@ -320,7 +314,8 @@ proc_create_runprogram(const char *name)
 	  linkedlist_insert(newproc->open_files->available, runner->key, runner->data);
 	  runner = runner->prev;
 	}
-
+	newproc->parent = kproc;
+	linkedlist_append(kproc->children, newproc);
 
 	return newproc;
 }

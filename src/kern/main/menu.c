@@ -137,6 +137,11 @@ common_prog(int nargs, char **args)
 		return result;
 	}
 
+	lock_acquire(menu_lock);
+	cv_wait(menu_cv, menu_lock);
+        lock_release(menu_lock);
+
+
 	/*
 	 * The new process will be destroyed when the program exits...
 	 * once you write the code for handling that.
@@ -162,11 +167,6 @@ cmd_prog(int nargs, char **args)
 	nargs--;
 
 	int ret = common_prog(nargs, args);
-
-	
-        lock_acquire(menu_lock);
-        cv_wait(menu_cv, menu_lock);
-        lock_release(menu_lock);
 
 	return ret;
 }

@@ -9,7 +9,7 @@ typedef struct Linked_List_Node Linked_List_Node;
 struct Linked_List_Node {
     Linked_List_Node *prev;
     Linked_List_Node *next;
-    int key;
+    unsigned key;
     void *data;
 };
 
@@ -18,15 +18,15 @@ typedef struct Linked_List Linked_List;
 struct Linked_List {
   Linked_List_Node *first;
   Linked_List_Node *last;
-  int length;
-  int limit;
+  unsigned length;
+  unsigned limit;
   struct lock * lk;
 };
 
 Linked_List *linkedlist_create(void);
 void linkedlist_destroy(Linked_List *list);
 
-Linked_List_Node *linkedlist_create_node(int key, void *data);
+Linked_List_Node *linkedlist_create_node(unsigned key, void *data);
 
 /*
  * Inserts the item at the front of the list.  If the item is not the
@@ -52,7 +52,7 @@ void linkedlist_printlist(Linked_List *list, int which);
  * their keys.
  */
 void 
-    linkedlist_insert(Linked_List *list, int key, void *data);
+    linkedlist_insert(Linked_List *list, unsigned key, void *data);
 
 /*
  * Removes the head node from the list.  key is set to the key of the
@@ -60,7 +60,7 @@ void
  *
  */
 void *
-linkedlist_remove_head(Linked_List *list, int *key);
+linkedlist_remove_head(Linked_List *list, unsigned *key);
 
 /*
  * Remove a node from a specified key from the list.
@@ -68,7 +68,7 @@ linkedlist_remove_head(Linked_List *list, int *key);
  *
  */
 void *
-linkedlist_remove(Linked_List *list, int key);
+linkedlist_remove(Linked_List *list, unsigned key);
 
 void 
 linkedlist_append(Linked_List *list, void *data);

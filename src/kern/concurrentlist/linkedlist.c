@@ -47,7 +47,7 @@ void linkedlist_destroy(Linked_List *list)
   kfree(list);
 }
 
-Linked_List_Node *linkedlist_create_node(int key, void *data)
+Linked_List_Node *linkedlist_create_node(unsigned key, void *data)
 {
     Linked_List_Node *newnode = kmalloc(sizeof(Linked_List_Node));
     newnode -> prev = NULL;
@@ -110,7 +110,7 @@ void linkedlist_printlist(Linked_List *list, int which)
 
 
 
-void linkedlist_insert(Linked_List *list, int key, void *data) {
+void linkedlist_insert(Linked_List *list, unsigned key, void *data) {
 
   if (list != NULL && (!list->limit || list->length < list->limit)) {
     
@@ -150,7 +150,7 @@ void linkedlist_insert(Linked_List *list, int key, void *data) {
 			
     }
     
-    int length = list -> length;
+    unsigned length = list -> length;
     length ++;
     // Test 6 - Yield so list -> length is corrupted -- simulates
     // yielding between asm instructions for list -> length ++;
@@ -162,7 +162,7 @@ void linkedlist_insert(Linked_List *list, int key, void *data) {
 
 }
 
-void * linkedlist_remove_head(Linked_List *list, int *key) {
+void * linkedlist_remove_head(Linked_List *list, unsigned *key) {
   void *data = NULL;
   
   if (list != NULL){
@@ -196,10 +196,9 @@ void * linkedlist_remove_head(Linked_List *list, int *key) {
   return data;
 }
 
-void * linkedlist_remove(Linked_List *list, int key){
+void * linkedlist_remove(Linked_List *list, unsigned key){
 
   void * data = NULL;
-  KASSERT(key > 0);
 
   if(list != NULL)
   {

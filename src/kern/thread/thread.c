@@ -781,8 +781,14 @@ thread_exit(void)
   
   cur = curthread;
   
-  pid_t pid = curproc->pid; 
-  
+  pid_t pid = curproc->pid;
+
+  if(curproc->parent == kproc){
+    lock_acquire(menu_lock);
+    cv_signal(menu_cv, menu_lock);
+    lock_release(menu_lock);
+  }
+
   proc_remthread(cur);
 
   /* Make sure we *are* detached (move this only if you're sure!) */
@@ -793,7 +799,7 @@ thread_exit(void)
   
   /* Interrupts off on this processor */
   splhigh();
-  if(curproc != kproc){
+  if(pid != kproc->pid){
     proc_destroy(proc_mngr_get_from_pid(glbl_mngr, pid));
   }
   thread_switch(S_ZOMBIE, NULL, NULL);
