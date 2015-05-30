@@ -21,6 +21,9 @@ int execv(const char *program, char **args)
     }
 
    char** progdest = kmalloc(sizeof(ARG_MAX));
+   if(progdest == NULL)
+     return ENOMEM;
+
    int err = copyin((const_userptr_t)program, progdest, sizeof(program));
 
    if (err)
@@ -36,13 +39,13 @@ int execv(const char *program, char **args)
    
    while(keep_going)
    {
-     if(progdest[runner] == '\0')
+     if(progdest[runner + 1] == NULL)
      {
-       nargs = nargs + 1;
-       if(progdest[runner + 1] == '\0')
-       {
-	 keep_going = false;
-       }
+       keep_going = false;
+     }
+     else if(progdest[runner] == '\0')
+     {
+       nargs++;
        argno = argno + 1;
        curarg = progdest[argno];
      }

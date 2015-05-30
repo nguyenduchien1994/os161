@@ -32,9 +32,9 @@ Linked_List_Node *linkedlist_create_node(unsigned key, void *data);
  * Inserts the item at the front of the list.  If the item is not the
  * only item in the list, set its key to min - 1, where min is the
  * previous minimum key in the list.  If this is the first item, set
- * its key to 0.
+ * its key to 0. Returns true if error.
  */
-void 
+bool 
 linkedlist_prepend(Linked_List *list, void *data);
 
 /*
@@ -49,9 +49,9 @@ void linkedlist_printlist(Linked_List *list, int which);
 
 /*
  * Inserts into the linked-list so that the items are in order by
- * their keys.
+ * their keys. Returns true if error
  */
-void 
+bool 
     linkedlist_insert(Linked_List *list, unsigned key, void *data);
 
 /*
@@ -70,21 +70,21 @@ linkedlist_remove_head(Linked_List *list, unsigned *key);
 void *
 linkedlist_remove(Linked_List *list, unsigned key);
 
-void 
+bool 
 linkedlist_append(Linked_List *list, void *data);
 
 typedef Linked_List stack;
 
 stack* stack_create(void);
 void stack_destroy(stack *s);
-void stack_push(stack *s, void *data);
+bool stack_push(stack *s, void *data);
 void* stack_pop(stack *s);//NULL if empty
 
 typedef Linked_List queue;
 
 queue* queue_create(void);
 void queue_destroy(queue *q);
-void queue_add(queue *q, void *data);
+bool queue_add(queue *q, void *data);
 void* queue_remove(queue *q);//NULL if empty
 
 typedef struct multi_queue{
@@ -106,7 +106,7 @@ typedef struct multi_queue{
 
 multi_queue* multi_queue_create(int * turns, int size);
 void multi_queue_destroy(multi_queue *mq);
-void multi_queue_add(multi_queue *mq, void *data, int which);
+bool multi_queue_add(multi_queue *mq, void *data, int which);
 void* multi_queue_remove(multi_queue *mq);//NULL if empty
 
 #endif

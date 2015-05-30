@@ -304,18 +304,22 @@ proc_create_runprogram(const char *name)
 
 	Linked_List_Node *runner = kproc->open_files->files->last;
 	while(runner != NULL){
+	  if(linkedlist_insert(newproc->open_files->files, runner->key, runner->data)){
+	    panic("Out of memory without user program running, you've got a leak");
+	  }
 	  open_file_incref((open_file*)runner->data);
-	  linkedlist_insert(newproc->open_files->files, runner->key, runner->data);
 	  runner = runner->prev;
 	}
 	
 	runner = kproc->open_files->available->last;
 	while(runner != NULL){
-	  linkedlist_insert(newproc->open_files->available, runner->key, runner->data);
+	  if(linkedlist_insert(newproc->open_files->available, runner->key, runner->data))
+	    panic("Out of memory without user program running, you've got a leak");
 	  runner = runner->prev;
 	}
 	newproc->parent = kproc;
-	linkedlist_append(kproc->children, newproc);
+	if(linkedlist_append(kproc->children, newproc))
+	  panic("Out of memory without user program running, you've got a leak");
 
 	return newproc;
 }
@@ -526,19 +530,35 @@ proc* proc_copy(void)
     kfree(ret->p_name);
     kfree(ret);
   }
-
+  
+  lock_acquire(curproc->open_files->files->lk);
   Linked_List_Node *runner = curproc->open_files->files->last;
   while(runner != NULL){
+    if(linkedlist_insert(ret->open_files->files, runner->key, runner->data)){
+      lock_release(curproc->open_files->files->lk);
+      file_list_destroy(ret->open_files);
+      kfree(ret->p_name);
+      kfree(ret);
+      return NULL;
+    }
     open_file_incref((open_file*)runner->data);
-    linkedlist_insert(ret->open_files->files, runner->key, runner->data);
     runner = runner->prev;
   }
+  lock_release(curproc->open_files->files->lk);
 
+  lock_acquire(curproc->open_files->available->lk);
   runner = curproc->open_files->available->last;
   while(runner != NULL){
-    linkedlist_insert(ret->open_files->available, runner->key, runner->data);
+    if(linkedlist_insert(ret->open_files->available, runner->key, runner->data)){
+      lock_release(curproc->open_files->available->lk);
+      file_list_destroy(ret->open_files);
+      kfree(ret->p_name);
+      kfree(ret);
+      return NULL;
+    }
     runner = runner->prev;
   }
+  lock_release(curproc->open_files->available->lk);
   
   ret->children = linkedlist_create();
   if(ret->children == NULL){

@@ -13,9 +13,9 @@ void queue_destroy(queue *q)
   linkedlist_destroy(q);
 }
 
-void queue_add(queue *q, void *data)
+bool queue_add(queue *q, void *data)
 {
-  linkedlist_append(q, data);
+  return linkedlist_append(q, data);
 }
 
 void* queue_remove(queue *q)

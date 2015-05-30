@@ -35,9 +35,9 @@ int lseek(int fd, off_t pos, int whence, off_t *ret)
     init = init + pos;
 
   }else if(whence == SEEK_END){
-    struct stat *statbuf = kmalloc(sizeof(struct stat));
-    f->vfile->vn_ops->vop_stat(f->vfile, statbuf);
-    init = statbuf->st_size - pos;
+    struct stat statbuf;
+    f->vfile->vn_ops->vop_stat(f->vfile, &statbuf);
+    init = statbuf.st_size - pos;
     
   }else{
     return EINVAL;

@@ -53,14 +53,14 @@ void multi_queue_destroy(multi_queue *mq)
   kfree(mq);
 }
 
-void multi_queue_add(multi_queue *mq, void *data, int which)
+bool multi_queue_add(multi_queue *mq, void *data, int which)
 {
 
   KASSERT(mq != 0);
   KASSERT(which >= 0);
   
   queue *add_to = *(mq->queues + which*sizeof(queue*));
-  queue_add(add_to, data);
+  return queue_add(add_to, data);
 }
 
 void* multi_queue_remove(multi_queue *mq)
