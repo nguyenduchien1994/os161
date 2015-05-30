@@ -18,55 +18,60 @@ int open(const char *filename, int flags)
       return EFAULT;                                                                                                      
     }
 
-   
-
-   void* namedest = kmalloc(sizeof(filename));
+   void *namedest = kmalloc(sizeof(filename));
+   if(namedest == NULL)
+     return ENOMEM;
    int err = copyin((const_userptr_t)filename, namedest, sizeof(filename));
 
    if (err)
    {
-      return err;
+     kfree(namedest);
+     return err;
    }
+   
+   mode_t mode = 0000;
+   /*
+   if (flags == O_RDONLY || flags == O_WRONLY || flags == O_RDWR)
+   {
+     
+     return EINVAL;
+   }
+   
+
+   if(flags == O_RDONLY)
+   {
+     mode = 0444;
+   } 
+   else if(flags == O_WRONLY)
+   {
+     mode =0222;
+   }
+   else if(flags == O_RDWR)
+   {
+     mode = 0666;
+   }
+   else
+   {
+     return EINVAL;
+   }
+   */
 
    struct vnode *file = kmalloc(sizeof(struct vnode));
-   struct vnode **ret = &file;
+   
+   err = vfs_open(namedest, flags, mode, &file); 
   
-   if (flags == O_RDONLY || flags == O_WRONLY || flags == O_RDWR)
-     {
-       return EINVAL;
-     }
+   if (err)
+   {
+     kfree(namedest);
+     kfree(file);
+     return err;
+   }
 
-  mode_t mode;
-
-  if(flags == O_RDONLY)
-    {
-      mode = 0444;
-    } 
-  else if(flags == O_WRONLY)
-    {
-      mode =0222;
-    }
-  else if(flags == O_RDWR)
-    {
-      mode = 0666;
-    }
-  else
-    {
-      mode = 0000;
-      return EINVAL;
-    }
-
-    err = vfs_open(namedest, flags, mode, ret); 
-  
-    if (err)
-    {
-      return err;
-    }
-
-    open_file *openfile = open_file_create(file, 0, flags); 
-  
-    err = file_list_add(curproc->open_files, openfile);
-
-    return err;
-  
+   open_file *openfile = open_file_create(file, 0, flags); 
+   err = file_list_add(curproc->open_files, openfile);   
+   kfree(namedest);
+   if(err)
+     kfree(file);
+   
+   return err;
 }

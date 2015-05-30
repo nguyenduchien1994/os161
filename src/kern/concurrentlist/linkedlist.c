@@ -9,6 +9,9 @@
 Linked_List *linkedlist_create(void)
 {
     Linked_List * ptr = kmalloc(sizeof(Linked_List));
+    if(ptr == NULL){
+      return NULL;
+    }
     ptr -> length = 0;
     ptr -> first = NULL;
     ptr -> last = NULL;
@@ -44,7 +47,7 @@ void linkedlist_destroy(Linked_List *list)
   kfree(list);
 }
 
-Linked_List_Node *linkedlist_create_node(int key, void *data)
+Linked_List_Node *linkedlist_create_node(unsigned key, void *data)
 {
     Linked_List_Node *newnode = kmalloc(sizeof(Linked_List_Node));
     newnode -> prev = NULL;
@@ -55,7 +58,7 @@ Linked_List_Node *linkedlist_create_node(int key, void *data)
     return newnode;
 }
 
-void linkedlist_prepend(Linked_List *list, void *data)
+bool linkedlist_prepend(Linked_List *list, void *data)
 {
   if (list != NULL && (!list->limit || list->length < list->limit)) {
     lock_acquire(list -> lk);
@@ -68,11 +71,19 @@ void linkedlist_prepend(Linked_List *list, void *data)
 	newnode = linkedlist_create_node(INT_MAX, data);
       else
 	newnode = linkedlist_create_node(list->limit, data);
+      if(newnode == NULL){
+	lock_release(list->lk);
+	return true;
+      }
       list -> first = newnode;
       list -> last = newnode;
     } else {
       newnode = linkedlist_create_node(f -> key - 1, data);
-      
+      if(newnode == NULL){
+	lock_release(list->lk);
+	return true;
+      }
+
       newnode -> next = list -> first;
       f -> prev = newnode;
       list -> first = newnode;
@@ -81,7 +92,9 @@ void linkedlist_prepend(Linked_List *list, void *data)
     list -> length ++;
     
     lock_release(list -> lk);
+    return false;
   }
+  return true;
 }
 
 
@@ -107,14 +120,18 @@ void linkedlist_printlist(Linked_List *list, int which)
 
 
 
-void linkedlist_insert(Linked_List *list, int key, void *data) {
+bool linkedlist_insert(Linked_List *list, unsigned key, void *data) {
 
   if (list != NULL && (!list->limit || list->length < list->limit)) {
     
     lock_acquire(list -> lk); 
     
     Linked_List_Node *node = linkedlist_create_node(key, data);
-    
+    if(node == NULL){
+      lock_release(list->lk);
+      return true;
+    }
+
     Linked_List_Node *curr = list -> first;
     
     if (curr == NULL) {
@@ -147,20 +164,21 @@ void linkedlist_insert(Linked_List *list, int key, void *data) {
 			
     }
     
-    int length = list -> length;
+    unsigned length = list -> length;
     length ++;
     // Test 6 - Yield so list -> length is corrupted -- simulates
     // yielding between asm instructions for list -> length ++;
     yield_if_should(6);
     list -> length = length;
 
-    lock_release(list -> lk);		
+    lock_release(list -> lk);
+    return false;
   }
-
+  return true;
 }
 
-void * linkedlist_remove_head(Linked_List *list, int *key) {
-  void * data = NULL;
+void * linkedlist_remove_head(Linked_List *list, unsigned *key) {
+  void *data = NULL;
   
   if (list != NULL){
     lock_acquire(list -> lk);
@@ -193,10 +211,9 @@ void * linkedlist_remove_head(Linked_List *list, int *key) {
   return data;
 }
 
-void * linkedlist_remove(Linked_List *list, int key){
+void * linkedlist_remove(Linked_List *list, unsigned key){
 
   void * data = NULL;
-  KASSERT(key > 0);
 
   if(list != NULL)
   {
@@ -214,9 +231,6 @@ void * linkedlist_remove(Linked_List *list, int key){
 	  list -> last = NULL;
 	else 
 	  list -> first -> prev = NULL;
-
-	kfree(node);
-	list -> length --;
       }
       else
       {
@@ -237,9 +251,9 @@ void * linkedlist_remove(Linked_List *list, int key){
 	    node -> next -> prev = node -> prev;
 	  }
 	  data = node->data;
-	  kfree(node);
-	  list -> length--;
 	}
+	kfree(node);
+	list -> length --;
       }
     }
     lock_release(list -> lk);
@@ -248,7 +262,7 @@ void * linkedlist_remove(Linked_List *list, int key){
 }
 
 
-void linkedlist_append(Linked_List *list, void *data)
+bool linkedlist_append(Linked_List *list, void *data)
 {
   if (list != NULL && (!list->limit || list->length < list->limit)) {
     lock_acquire(list -> lk);
@@ -258,10 +272,19 @@ void linkedlist_append(Linked_List *list, void *data)
     
     if (list -> last == NULL) {
       newnode = linkedlist_create_node(0, data);
+      if(newnode == NULL){
+	lock_release(list->lk);
+	return true;
+      }
+
       list -> last = newnode;
       list -> first = newnode;
-    } else {
+    } 
+    else {
       newnode = linkedlist_create_node(f -> key + 1, data);
+      if(newnode == NULL){
+	return true;
+      }
       
       newnode -> prev = list -> last;
       f -> next = newnode;
@@ -271,5 +294,7 @@ void linkedlist_append(Linked_List *list, void *data)
     list -> length ++;
     
     lock_release(list -> lk);
+    return false;
   }
+  return true;
 }

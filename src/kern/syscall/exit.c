@@ -30,14 +30,11 @@ void _exit(int exitcode)
     bool found_in_parent = false;
     while(runner != NULL && !found_in_parent){
       if(runner->data == curproc){
-	if(runner->next){
-	  runner->next->prev = runner->prev;
-	}
-	if(runner->prev){
-	  runner->prev->next = runner->next;
-	}
-	kfree(runner);
+	linkedlist_remove(curproc->parent->children, runner->key);
 	found_in_parent = true;
+      }
+      else{
+	runner = runner->next;
       }
     }
     KASSERT(found_in_parent);

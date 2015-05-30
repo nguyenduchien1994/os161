@@ -93,13 +93,17 @@ int file_list_add(file_list *fl, open_file *of)
   int ret;
   if (fl -> available -> first == NULL)
   {
-    linkedlist_append(fl -> files, of);
+    if(linkedlist_append(fl -> files, of))
+      return -1;
     ret = fl -> files -> last -> key;
   }
   else
   {
-    ret =  *( (int*) stack_pop(fl -> available) );
-    linkedlist_insert(fl -> files, ret, of);
+    int *id = stack_pop(fl -> available);
+    ret = *id;
+    kfree(id);
+    if(linkedlist_insert(fl -> files, ret, of))
+      return -1;
   }
   open_file_incref(of);
   return ret;
@@ -116,11 +120,11 @@ static Linked_List_Node *file_list_get_node(file_list *fl, int fd)
   else
   {
     Linked_List_Node *node = fl -> files -> first;
-    while(node != NULL && fd > node -> key)
+    while(node != NULL && (unsigned)fd > node -> key)
     {
       node = node -> next;
     }
-    if (node != NULL && node -> key != fd)
+    if (node != NULL && node -> key != (unsigned)fd)
     {
       return NULL;
     }
@@ -152,12 +156,14 @@ int file_list_insert(file_list *fl, open_file *of, int fd)
     int curfd = fl -> files -> last -> key;
     if (fd > curfd)
     {
-      linkedlist_insert(fl -> files, fd, of);
+      if(linkedlist_insert(fl -> files, fd, of))
+	return -1;
       for (int i=curfd; i<fd; i++)
       {
 	int *to_push = kmalloc(sizeof(int));
 	*to_push = i;
-	stack_push(fl->available, to_push);
+	if(stack_push(fl->available, to_push))
+	  return -1;
       }
     }
     else
@@ -165,15 +171,30 @@ int file_list_insert(file_list *fl, open_file *of, int fd)
       Linked_List_Node *node = file_list_get_node(fl,fd);
       if (node == NULL)
       {
-	linkedlist_insert(fl -> files, fd, of);
-	linkedlist_remove((Linked_List*)fl -> available, fd);
+	if(linkedlist_insert(fl -> files, fd, of))
+	  return -1;
+	Linked_List_Node *runner = fl->available->first;
+	while(runner != NULL){
+	  if(*(int*)runner->data == fd){
+	    if(runner->prev){
+	      runner->prev->next = runner->next;
+	    }
+	    if(runner->next){
+	      runner->next->prev = runner->prev;
+	    }
+	    fl->available->length--;
+	    kfree(runner->data);
+	  }
+	  else{
+	    runner = runner->next;
+	  }
+	}
       }
       else
       {
 	open_file_decref((open_file*)node -> data);
 	node -> data = of;
       }
-     
     }
     open_file_incref(of);
     return 0;
@@ -210,6 +231,9 @@ open_file *file_list_remove(file_list *fl, int fd)
     open_file *ret = linkedlist_remove(fl -> files, fd);
     
     int *to_push = kmalloc(sizeof(int));
+    if(to_push == NULL){
+      return NULL;
+    }
     *to_push = fd;
     stack_push(fl -> available, to_push);
     return ret;

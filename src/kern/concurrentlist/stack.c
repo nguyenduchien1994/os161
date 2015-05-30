@@ -15,13 +15,13 @@ void stack_destroy(stack *s)
   linkedlist_destroy(s);
 }
 
-void stack_push(stack *s, void *data)
+bool stack_push(stack *s, void *data)
 {
-  linkedlist_prepend(s,data);
+  return linkedlist_prepend(s,data);
 }
 
 void* stack_pop(stack *s)
 {
-  int * key = &s->first->key;
-  return linkedlist_remove_head(s,key);
+  unsigned key;
+  return linkedlist_remove_head(s,&key);
 }

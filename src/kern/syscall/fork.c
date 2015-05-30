@@ -84,7 +84,11 @@ int fork(pid_t *pret)
     return ENOMEM;
   }
 
-  linkedlist_prepend(curproc->children, child);
+  err = linkedlist_prepend(curproc->children, child);
+  if(err){
+    new_proc_destroy(child);
+    return ENOMEM;
+  }
   child->parent = curproc;
   
   child->context = kmalloc(sizeof(struct trapframe));
