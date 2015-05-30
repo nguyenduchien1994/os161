@@ -30,14 +30,13 @@ int open(const char *filename, int flags)
    }
    
    mode_t mode = 0000;
-   /*
-   if (flags == O_RDONLY || flags == O_WRONLY || flags == O_RDWR)
+   
+   if (flags != O_RDONLY || flags != O_WRONLY || flags != O_RDWR)
    {
      
      return EINVAL;
    }
    
-
    if(flags == O_RDONLY)
    {
      mode = 0444;
@@ -46,15 +45,11 @@ int open(const char *filename, int flags)
    {
      mode =0222;
    }
-   else if(flags == O_RDWR)
-   {
-     mode = 0666;
-   }
    else
    {
-     return EINVAL;
-   }
-   */
+     mode = 0666; //for 0_RDWR
+   } 
+
 
    struct vnode *file = kmalloc(sizeof(struct vnode));
    
