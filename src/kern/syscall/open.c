@@ -15,8 +15,7 @@ int open(const char *filename, int flags)
   
    if (filename == NULL)                                                                                    
     {
-      return EFAULT;                                                                                                      
-    }
+      return EFAULT;                                                                                                        }
 
    void *namedest = kmalloc(sizeof(filename));
    if(namedest == NULL)
@@ -28,27 +27,33 @@ int open(const char *filename, int flags)
      kfree(namedest);
      return err;
    }
-   
-   mode_t mode = 0000;
-   
-   if (flags != O_RDONLY || flags != O_WRONLY || flags != O_RDWR)
+
+
+   // 3 eqauls invalid or if over 64 (1000000)
+   if(((flags & 3) == 3) || flags < 1000000)
    {
-     
      return EINVAL;
    }
+
+   mode_t mode = 0000;
    
-   if(flags == O_RDONLY)
+   if(flags & O_RDONLY)
    {
      mode = 0444;
    } 
-   else if(flags == O_WRONLY)
+   else if(flags & O_WRONLY)
    {
-     mode =0222;
+     mode = 0222;
    }
+   else if(flags & O_RDWR)
+   {
+     mode = 0666; 
+   } 
    else
    {
-     mode = 0666; //for 0_RDWR
-   } 
+     kfree(namedest);
+     return EINVAL;
+   }
 
 
    struct vnode *file = kmalloc(sizeof(struct vnode));
