@@ -802,6 +802,10 @@ thread_exit(void)
   if(pid != kproc->pid){
     proc_destroy(proc_mngr_get_from_pid(glbl_mngr, pid));
   }
+
+  if(lock_do_i_hold(glbl_mngr->proc_sys_lk))
+     lock_release(glbl_mngr->proc_sys_lk);
+
   thread_switch(S_ZOMBIE, NULL, NULL);
   panic("braaaaaaaiiiiiiiiiiinssssss\n");
 }

@@ -36,9 +36,14 @@ proc_mngr* proc_mngr_create(void)
   KASSERT(ret->free_ids != NULL);
   ret->free_ids->limit = PID_MAX-1;
   
-  ret->glbl_lk = lock_create("proc lock");
-  KASSERT(ret->glbl_lk != NULL);
-  
+  ret->run_lk = lock_create("run lock");
+  KASSERT(ret->run_lk != NULL);
+
+  ret->file_sys_lk = lock_create("file syscall lock");
+  KASSERT(ret->file_sys_lk != NULL);
+  ret->proc_sys_lk = lock_create("proc syscall lock");
+  KASSERT(ret->proc_sys_lk != NULL);  
+
   return ret;
 }
 
@@ -46,7 +51,9 @@ void proc_mngr_destroy(proc_mngr *ptr)
 {
   KASSERT(ptr != NULL);
 
-  kfree(ptr->glbl_lk);
+  kfree(ptr->proc_sys_lk);
+  kfree(ptr->file_sys_lk);
+  kfree(ptr->run_lk);
   kfree(ptr->free_ids);
   kfree(ptr->ready_queue);
   kfree(ptr->threads);
@@ -57,10 +64,6 @@ void proc_mngr_destroy(proc_mngr *ptr)
 int proc_mngr_add(proc_mngr *this, proc *p, struct thread *t)
 {
   KASSERT(this != NULL);
-  
-  if(p != kproc){
-    lock_acquire(this->glbl_lk);
-  }
 
   pid_t pid;
   if(this->free_ids->first == NULL){
@@ -80,10 +83,6 @@ int proc_mngr_add(proc_mngr *this, proc *p, struct thread *t)
   }
 
   p->pid = pid;
-
-  if(p != kproc){
-    lock_release(this->glbl_lk);
-  }
   
   return pid;
 }
@@ -101,34 +100,22 @@ struct thread* proc_mngr_get_thread(proc_mngr *this, proc *p)
 {
   KASSERT(this != NULL);
 
-  lock_acquire(this->glbl_lk);
   Linked_List_Node *runner = this->free_ids->first;
   while(runner != NULL){
     KASSERT(p->pid != *((pid_t*) runner->data));
   }
 
   struct thread* ret = *(this->threads + (p->pid)*sizeof(struct thread*));
-  lock_release(this->glbl_lk);
   
   return ret;
-}
-
-struct lock* proc_mngr_get_lock(proc_mngr *this)
-{
-  KASSERT(this != NULL);
-  return this->glbl_lk;
 }
 
 void proc_mngr_make_ready(proc_mngr *this, proc *p)
 {
   KASSERT(this != NULL);
-  
-  lock_acquire(this->glbl_lk);
 
   multi_queue_add(this->ready_queue,p, (int)p->rt);
   p->cur_state = ready;
-  
-  lock_release(this->glbl_lk);
 }
 
 proc* proc_mngr_get_from_pid(proc_mngr *this, pid_t pid)

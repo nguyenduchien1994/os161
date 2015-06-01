@@ -16,14 +16,18 @@ int lseek(int fd, off_t pos, int whence, off_t *ret)
     return EBADF;
   }
 
+  lock_acquire(glbl_mngr->file_sys_lk);
+  
   open_file *f = file_list_get(curproc->open_files,fd);
   if(f == NULL)
   {
+    lock_release(glbl_mngr->file_sys_lk);
     return EBADF;
   }
   
   if(!f->vfile->vn_ops->vop_isseekable(f->vfile))
   {
+    lock_release(glbl_mngr->file_sys_lk);
     return ESPIPE;
   }
 
@@ -40,14 +44,18 @@ int lseek(int fd, off_t pos, int whence, off_t *ret)
     init = statbuf.st_size - pos;
     
   }else{
+    lock_release(glbl_mngr->file_sys_lk);
     return EINVAL;
   }
 
   if(init < 0){
+    lock_release(glbl_mngr->file_sys_lk);
     return EINVAL;
   }
 
   f->offset = init;
   *ret = init;
+
+  lock_release(glbl_mngr->file_sys_lk);
   return 0;
 }

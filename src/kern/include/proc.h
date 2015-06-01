@@ -133,8 +133,10 @@ typedef struct proc_mngr{
   struct thread **threads;//256 array
   multi_queue *ready_queue;
   stack *free_ids;
-  struct lock *glbl_lk;
+  struct lock *run_lk;
   int next_pid;
+  struct lock *file_sys_lk;
+  struct lock *proc_sys_lk;
 } proc_mngr;
 
 proc_mngr *glbl_mngr;
@@ -186,8 +188,6 @@ int proc_mngr_add(proc_mngr *this, proc *p, struct thread *t);
 void proc_mngr_remove(proc_mngr *this, pid_t p);
 
 struct thread* proc_mngr_get_thread(proc_mngr *this, proc *p);
-struct lock* proc_mngr_get_lock(proc_mngr *this);
-
 proc* proc_mngr_get_from_pid(proc_mngr *this, pid_t pid);
 
 void proc_mngr_make_ready(proc_mngr *this, proc *p);

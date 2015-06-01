@@ -11,7 +11,7 @@
 int chdir(const char *pathname)
 {
   // Error Checks                                                                                          
-                     
+
   if (pathname == NULL)                                                                                    
     {
       return EFAULT;                                                                                                           

@@ -9,6 +9,7 @@
 void _exit(int exitcode)
 {
   lock_acquire(curproc->exit_lock);
+  lock_acquire(glbl_mngr->file_sys_lk);
 
   Linked_List *files = curproc->open_files->files; 
   Linked_List_Node *runner = files->first;
@@ -24,7 +25,10 @@ void _exit(int exitcode)
     ((proc*)runner->data)->parent = NULL;
     runner = runner->next;
   }
-  
+ 
+  lock_release(glbl_mngr->file_sys_lk);
+  lock_acquire(glbl_mngr->proc_sys_lk);
+
   if(curproc->parent){
     runner = curproc->parent->children->first;
     bool found_in_parent = false;
