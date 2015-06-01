@@ -25,16 +25,20 @@ int read(int fd, void *buf, size_t buflen, ssize_t *ret)
   }
   
   int err = 0;
+  lock_acquire(glbl_mngr->file_sys_lk);
+
   open_file *to_read = file_list_get(((proc*)curproc)->open_files,fd);
 
   if (to_read == NULL)
   {
+    lock_release(glbl_mngr->file_sys_lk);
     return EBADF;
   }
   else
   {
     if (to_read->flags & O_WRONLY)
     {
+      lock_release(glbl_mngr->file_sys_lk);
       return EBADF;
     } 
     else
@@ -58,5 +62,6 @@ int read(int fd, void *buf, size_t buflen, ssize_t *ret)
       lock_release(to_read->file_lk);
     }
   }
+  lock_release(glbl_mngr->file_sys_lk);
   return err;
 }

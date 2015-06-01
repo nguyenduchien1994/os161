@@ -18,7 +18,9 @@ typedef struct fork_params{
 static void child_fork(void *params, unsigned long junk)
 {
   (void)junk;
-  //give return back to parent
+  
+  lock_acquire(glbl_mngr->proc_sys_lk);
+
   pid_t pid = proc_mngr_add(glbl_mngr, curproc, curthread);
   *(((fork_params*)params)->pret) = pid;
   if(pid < 1){
@@ -28,6 +30,7 @@ static void child_fork(void *params, unsigned long junk)
       KASSERT(runner != NULL);
     }
     linkedlist_remove(curproc->parent->children, runner->key);
+    lock_release(glbl_mngr->proc_sys_lk);
     thread_exit();
   }
   //proc_mngr_make_ready(glbl_mngr, curproc);
@@ -43,7 +46,9 @@ static void child_fork(void *params, unsigned long junk)
   struct trapframe tf;
   copy_context(&tf);
   tf.tf_status = CST_IRQMASK | CST_IEp | CST_KUp;
-
+  
+  lock_release(glbl_mngr->proc_sys_lk);
+  
   mips_usermode(&tf);
 }
 
@@ -78,6 +83,10 @@ static void new_proc_destroy(proc *proc)
 //ret 0 for child, pid of child for parent
 int fork(pid_t *pret)
 {
+  kheap_printstats();
+
+  kprintf("proc: %d", sizeof(proc));
+
   proc *child = proc_copy();
   int err = 0;
   if(child == NULL){
@@ -86,6 +95,7 @@ int fork(pid_t *pret)
 
   err = linkedlist_prepend(curproc->children, child);
   if(err){
+
     new_proc_destroy(child);
     return ENOMEM;
   }

@@ -16,9 +16,9 @@ int execv(const char *program, char **args)
 {
 
    if (program == NULL)                                                                                    
-    {
-      return ENOENT;                                                                                                           
-    }
+   {
+     return ENOENT;                                                                                                           
+   }
 
    char** progdest = kmalloc(sizeof(ARG_MAX));
    if(progdest == NULL)
@@ -55,56 +55,63 @@ int execv(const char *program, char **args)
      }
    }
 
-        struct addrspace *as;
-        struct vnode *v;
-	vaddr_t entrypoint, stackptr;
-	int result;
+   lock_acquire(glbl_mngr->proc_sys_lk);
 
-	/* Open the file. */
-	result = vfs_open((char*)program, O_RDONLY, 0, &v);
-	if (result) {
-		return result;
-	}
+   struct addrspace *as;
+   struct vnode *v;
+   vaddr_t entrypoint, stackptr;
+   int result;
+   
+   /* Open the file. */
+   result = vfs_open((char*)program, O_RDONLY, 0, &v);
+   if (result) {
+     lock_release(glbl_mngr->proc_sys_lk);
+     return result;
+   }
+   
+   /* We should be a new process. */
+   KASSERT(proc_getas() == NULL);
+   
+   /* Create a new address space. */
+   as = as_create();
+   if (as == NULL) {
+     vfs_close(v);
+     lock_release(glbl_mngr->proc_sys_lk);
+     return ENOMEM;
+   }
+   
+   /* Switch to it and activate it. */
+   proc_setas(as);
+   as_activate();
+   
+   /* Load the executable. */
+   result = load_elf(v, &entrypoint);
+   if (result) {
+     /* p_addrspace will go away when curproc is destroyed */
+     vfs_close(v);
+     lock_release(glbl_mngr->proc_sys_lk);
+     return result;
+   }
+   
+   /* Done with the file now. */
+   vfs_close(v);
+   
+   /* Define the user stack in the address space */
+   result = as_define_stack(as, &stackptr);
+   lock_release(glbl_mngr->proc_sys_lk);
 
-	/* We should be a new process. */
-	KASSERT(proc_getas() == NULL);
-
-	/* Create a new address space. */
-	as = as_create();
-	if (as == NULL) {
-		vfs_close(v);
-		return ENOMEM;
-	}
-
-	/* Switch to it and activate it. */
-	proc_setas(as);
-	as_activate();
-
-	/* Load the executable. */
-	result = load_elf(v, &entrypoint);
-	if (result) {
-		/* p_addrspace will go away when curproc is destroyed */
-		vfs_close(v);
-		return result;
-	}
-
-	/* Done with the file now. */
-	vfs_close(v);
-
-	/* Define the user stack in the address space */
-	result = as_define_stack(as, &stackptr);
-	if (result) {
-		/* p_addrspace will go away when curproc is destroyed */
-		return result;
-	}
-
-	/* Warp to user mode. */
-	enter_new_process(nargs /*argc*/, (userptr_t)&args /*userspace addr of argv*/,
-			  NULL /*userspace addr of environment*/,
-			  stackptr, entrypoint);
-
+   if (result) {
+     /* p_addrspace will go away when curproc is destroyed */
+     return result;
+   }
+   
+   /* Warp to user mode. */
+   enter_new_process(nargs /*argc*/, (userptr_t)&args /*userspace addr of argv*/,
+		     NULL /*userspace addr of environment*/,
+		     stackptr, entrypoint);
+   
 	/* enter_new_process does not return. */
-	panic("enter_new_process returned\n");
-	return EINVAL;
-
+   panic("enter_new_process returned\n");
+   return EINVAL;
+   
 }

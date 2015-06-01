@@ -18,14 +18,20 @@ int open(const char *filename, int flags)
       return EFAULT;                                                                                                      
     }
 
+   lock_acquire(glbl_mngr->file_sys_lk);
+
    void *namedest = kmalloc(sizeof(filename));
-   if(namedest == NULL)
+   if(namedest == NULL){
+     lock_release(glbl_mngr->file_sys_lk);
      return ENOMEM;
+   }
+
    int err = copyin((const_userptr_t)filename, namedest, sizeof(filename));
 
    if (err)
    {
      kfree(namedest);
+     lock_release(glbl_mngr->file_sys_lk);
      return err;
    }
    
@@ -64,6 +70,7 @@ int open(const char *filename, int flags)
    {
      kfree(namedest);
      kfree(file);
+     lock_release(glbl_mngr->file_sys_lk);
      return err;
    }
 
@@ -72,6 +79,7 @@ int open(const char *filename, int flags)
    kfree(namedest);
    if(err)
      kfree(file);
-   
+
+   lock_release(glbl_mngr->file_sys_lk);
    return err;
 }
