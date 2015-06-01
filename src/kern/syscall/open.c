@@ -38,6 +38,8 @@ int open(const char *filename, int flags)
    // 3 eqauls invalid or if over 64 (1000000)
    if(((flags & 3) == 3) || flags < 1000000)
    {
+     kfree(namedest);
+     lock_release(glbl_mngr->file_sys_lk);
      return EINVAL;
    }
 
@@ -58,6 +60,7 @@ int open(const char *filename, int flags)
    else
    {
      kfree(namedest);
+     lock_release(glbl_mngr->file_sys_lk);
      return EINVAL;
    }
 
