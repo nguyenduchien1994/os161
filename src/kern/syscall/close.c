@@ -12,8 +12,11 @@
 
 int close(int fd, int *ret)
 {
+  lock_acquire(glbl_mngr->file_sys_lk);
+
   if (fd < 0 || fd > INT_MAX)
   {
+    lock_release(glbl_mngr->file_sys_lk);
     return EBADF;
   }
   
@@ -22,17 +25,20 @@ int close(int fd, int *ret)
 
   if (to_close == NULL)
   {
+    lock_release(glbl_mngr->file_sys_lk);
     return EBADF;
   }
   else
   {
     if (to_close -> vfile == NULL)
     {
+      lock_release(glbl_mngr->file_sys_lk);
       return EBADF;
     }
     vfs_close(to_close -> vfile);
     open_file_decref(to_close);
     
+    lock_release(glbl_mngr->file_sys_lk);
     return 0;
   }
 }

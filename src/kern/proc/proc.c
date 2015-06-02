@@ -142,9 +142,7 @@ proc_create(const char *name)
  * probably want to do so.
  */
 void proc_destroy(struct proc *proc)
-{
-  lock_acquire(glbl_mngr->glbl_lk);
-  
+{ 
 	/*
 	 * You probably want to destroy and null out much of the
 	 * process (particularly the address space) at exit time if
@@ -230,8 +228,6 @@ void proc_destroy(struct proc *proc)
 	
 	kfree(proc->p_name);
 	kfree(proc);
-	
-	lock_release(glbl_mngr->glbl_lk);
 }
 
 /*

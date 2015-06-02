@@ -15,46 +15,55 @@ int open(const char *filename, int flags)
   
    if (filename == NULL)                                                                                    
     {
-      return EFAULT;                                                                                                      
-    }
+      return EFAULT;                                                                                                        }
+
+   lock_acquire(glbl_mngr->file_sys_lk);
 
    void *namedest = kmalloc(sizeof(filename));
-   if(namedest == NULL)
+   if(namedest == NULL){
+     lock_release(glbl_mngr->file_sys_lk);
      return ENOMEM;
+   }
+
    int err = copyin((const_userptr_t)filename, namedest, sizeof(filename));
 
    if (err)
    {
      kfree(namedest);
+     lock_release(glbl_mngr->file_sys_lk);
      return err;
    }
-   
-   mode_t mode = 0000;
-   /*
-   if (flags == O_RDONLY || flags == O_WRONLY || flags == O_RDWR)
+
+
+   // 3 eqauls invalid or if over 64 (1000000)
+   if(((flags & 3) == 3) || flags < 1000000)
    {
-     
+     kfree(namedest);
+     lock_release(glbl_mngr->file_sys_lk);
      return EINVAL;
    }
-   
 
-   if(flags == O_RDONLY)
+   mode_t mode = 0000;
+   
+   if(flags & O_RDONLY)
    {
      mode = 0444;
    } 
-   else if(flags == O_WRONLY)
+   else if(flags & O_WRONLY)
    {
-     mode =0222;
+     mode = 0222;
    }
-   else if(flags == O_RDWR)
+   else if(flags & O_RDWR)
    {
-     mode = 0666;
-   }
+     mode = 0666; 
+   } 
    else
    {
+     kfree(namedest);
+     lock_release(glbl_mngr->file_sys_lk);
      return EINVAL;
    }
-   */
+
 
    struct vnode *file = kmalloc(sizeof(struct vnode));
    
@@ -64,6 +73,7 @@ int open(const char *filename, int flags)
    {
      kfree(namedest);
      kfree(file);
+     lock_release(glbl_mngr->file_sys_lk);
      return err;
    }
 
@@ -72,6 +82,7 @@ int open(const char *filename, int flags)
    kfree(namedest);
    if(err)
      kfree(file);
-   
+
+   lock_release(glbl_mngr->file_sys_lk);
    return err;
 }
