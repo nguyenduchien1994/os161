@@ -80,8 +80,9 @@ int open(const char *filename, int flags)
    open_file *openfile = open_file_create(file, 0, flags); 
    err = file_list_add(curproc->open_files, openfile);   
    kfree(namedest);
-   if(err)
+   if(err){
      kfree(file);
+   }
 
    lock_release(glbl_mngr->file_sys_lk);
    return err;

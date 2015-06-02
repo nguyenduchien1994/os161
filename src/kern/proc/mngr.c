@@ -54,6 +54,11 @@ void proc_mngr_destroy(proc_mngr *ptr)
   kfree(ptr->proc_sys_lk);
   kfree(ptr->file_sys_lk);
   kfree(ptr->run_lk);
+  Linked_List_Node *runner = ptr->free_ids->first;
+  while(runner != NULL){
+    kfree(runner->data);
+    runner = runner->next;
+  }
   kfree(ptr->free_ids);
   kfree(ptr->ready_queue);
   kfree(ptr->threads);

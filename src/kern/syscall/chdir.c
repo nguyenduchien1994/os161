@@ -29,9 +29,5 @@ int chdir(const char *pathname)
   
   err = vfs_chdir(namedest);
   kfree(namedest);
-  if (err)
-  {
-      return err;
-  }
-  return 0;                           
+  return err;
 }

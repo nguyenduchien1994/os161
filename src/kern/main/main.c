@@ -96,6 +96,8 @@ boot(void)
 	 * dev/generic/console.c).
 	 */
 
+  vm_inited = false;
+
 	kprintf("\n");
 	kprintf("OS/161 base system version %s\n", BASE_VERSION);
 	kprintf("%s", harvard_copyright);
@@ -138,6 +140,10 @@ boot(void)
 	 */
 	COMPILE_ASSERT(sizeof(userptr_t) == sizeof(char *));
 	COMPILE_ASSERT(sizeof(*(userptr_t)0) == sizeof(char));
+
+	vm_inited = true;
+	//verbose_alloc = false;
+	verbose_alloc = true;
 }
 
 /*

@@ -81,7 +81,12 @@ syscall(void *trapframe, unsigned long junk)
 {
   (void)junk;
   struct trapframe *tf = (struct trapframe*)trapframe;
-  curproc->context = tf;
+  
+  if(!curproc->context)
+    curproc->context = kmalloc(sizeof(struct trapframe));
+  
+  memcpy(curproc->context, tf, sizeof(struct trapframe));
+  
   int callno;
   int32_t retval;
   int err;

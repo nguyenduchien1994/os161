@@ -25,7 +25,7 @@ Linked_List *linkedlist_create(void)
     return ptr;
 }
 
-
+//does not destroy contents
 static void node_destroy(Linked_List_Node *n){
   KASSERT(n != NULL);
   if(n->next != NULL){
@@ -43,7 +43,7 @@ void linkedlist_destroy(Linked_List *list)
     node_destroy(list->first);
   }
   
-  kfree(list -> lk);
+  lock_destroy(list -> lk);
   kfree(list);
 }
 
