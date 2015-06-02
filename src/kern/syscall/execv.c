@@ -22,12 +22,14 @@ int execv(const char *program, char **args)
 
    char** progdest = kmalloc(sizeof(ARG_MAX));
    if(progdest == NULL)
+     kfree(progdest);
      return ENOMEM;
 
    int err = copyin((const_userptr_t)program, progdest, sizeof(program));
 
    if (err)
    {
+     kfree(progdest);
       return EIO;
    }
 
@@ -65,7 +67,8 @@ int execv(const char *program, char **args)
    /* Open the file. */
    result = vfs_open((char*)program, O_RDONLY, 0, &v);
    if (result) {
-     lock_release(glbl_mngr->proc_sys_lk);
+     kfree(progdest);
+     lock_release(glbl_mngr->proc_sys_lk);   
      return result;
    }
    
@@ -76,6 +79,7 @@ int execv(const char *program, char **args)
    as = as_create();
    if (as == NULL) {
      vfs_close(v);
+     kfree(progdest);
      lock_release(glbl_mngr->proc_sys_lk);
      return ENOMEM;
    }
@@ -89,6 +93,7 @@ int execv(const char *program, char **args)
    if (result) {
      /* p_addrspace will go away when curproc is destroyed */
      vfs_close(v);
+     kfree(progdest);
      lock_release(glbl_mngr->proc_sys_lk);
      return result;
    }
@@ -102,6 +107,7 @@ int execv(const char *program, char **args)
 
    if (result) {
      /* p_addrspace will go away when curproc is destroyed */
+     kfree(progdest);
      return result;
    }
    
@@ -111,6 +117,7 @@ int execv(const char *program, char **args)
 		     stackptr, entrypoint);
    
 	/* enter_new_process does not return. */
+   kfree(progdest);
    panic("enter_new_process returned\n");
    return EINVAL;
    

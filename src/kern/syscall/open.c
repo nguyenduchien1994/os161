@@ -21,6 +21,7 @@ int open(const char *filename, int flags)
 
    void *namedest = kmalloc(sizeof(filename));
    if(namedest == NULL){
+     kfree(namedest);
      lock_release(glbl_mngr->file_sys_lk);
      return ENOMEM;
    }
