@@ -14,17 +14,7 @@ void _exit(int exitcode)
   Linked_List *files = curproc->open_files->files; 
   Linked_List_Node *runner = files->first;
 
-  while(runner != NULL)
-  {
-    open_file_decref(runner->data);
-    runner = runner->next;
-  }
-
-  runner = curproc->children->first;
-  while(runner != NULL){
-    ((proc*)runner->data)->parent = NULL;
-    runner = runner->next;
-  }
+  proc_shutdown(curproc);
  
   lock_release(glbl_mngr->file_sys_lk);
   lock_acquire(glbl_mngr->proc_sys_lk);

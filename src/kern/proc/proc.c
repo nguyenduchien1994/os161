@@ -231,6 +231,60 @@ void proc_destroy(struct proc *proc)
 }
 
 /*
+ * Partially destroy a process, except for the exit status, locks and memory deallocation
+ */
+void proc_shutdown(struct proc *proc)
+{ 
+        KASSERT(proc != NULL);
+	KASSERT(proc != kproc);
+
+	/* VFS fields */
+	if (proc->p_cwd) {
+		VOP_DECREF(proc->p_cwd);
+		proc->p_cwd = NULL;
+	}
+
+	/* VM fields */
+	if (proc->p_addrspace) {
+		struct addrspace *as;
+
+		if (proc == curproc) {
+			as = proc_setas(NULL);
+			as_deactivate();
+		}
+		else {
+			as = proc->p_addrspace;
+			proc->p_addrspace = NULL;
+		}
+		as_destroy(as);
+	}
+
+	Linked_List_Node *runner = proc->children->first;
+	while(runner != NULL)
+	{
+	  ((struct proc*)runner->data)->parent = NULL;
+	  runner = runner->next;
+	}
+
+	file_list_destroy(proc->open_files);
+	linkedlist_destroy(proc->children);
+}
+
+void usr_proc_destroy (struct proc *proc)
+{
+  spinlock_cleanup(&proc->p_lock);
+
+  lock_destroy(proc->exit_lock);
+  cv_destroy(proc->exit_cv);
+  sem_destroy(proc->exit_sem);
+
+  proc_mngr_remove(glbl_mngr, proc->pid);
+       
+  kfree(proc->p_name);
+  kfree(proc);
+}
+
+/*
  * Create the process structure for the kernel.
  */
 void

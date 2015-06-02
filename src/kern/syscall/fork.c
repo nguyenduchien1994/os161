@@ -83,9 +83,9 @@ static void new_proc_destroy(proc *proc)
 //ret 0 for child, pid of child for parent
 int fork(pid_t *pret)
 {
-  kheap_printstats();
+  //kheap_printstats();
 
-  kprintf("proc: %d", sizeof(proc));
+  //kprintf("proc: %d", sizeof(proc));
 
   proc *child = proc_copy();
   int err = 0;
