@@ -30,6 +30,8 @@ static void child_fork(void *params, unsigned long junk)
       KASSERT(runner != NULL);
     }
     linkedlist_remove(curproc->parent->children, runner->key);
+    
+    V(((fork_params*)params)->sem);
     lock_release(glbl_mngr->proc_sys_lk);
     thread_exit();
   }
@@ -83,9 +85,9 @@ static void new_proc_destroy(proc *proc)
 //ret 0 for child, pid of child for parent
 int fork(pid_t *pret)
 {
-  kheap_printstats();
+  //kheap_printstats();
 
-  kprintf("proc: %d", sizeof(proc));
+  //kprintf("proc: %d", sizeof(proc));
 
   proc *child = proc_copy();
   int err = 0;
@@ -94,19 +96,12 @@ int fork(pid_t *pret)
   }
 
   err = linkedlist_prepend(curproc->children, child);
-  if(err){
 
+  if(err){
     new_proc_destroy(child);
     return ENOMEM;
   }
   child->parent = curproc;
-  
-  child->context = kmalloc(sizeof(struct trapframe));
-  if(child->context == NULL){
-    new_proc_destroy(child);
-    return ENOMEM;
-  }
-  copy_context(child->context);
   
   err = as_copy(curproc->p_addrspace, &child->p_addrspace);
   
@@ -139,7 +134,7 @@ int fork(pid_t *pret)
   }
 
   P(fp->sem);
-  kfree(fp->sem);
+  sem_destroy(fp->sem);
   kfree(fp);
   if(*pret < 0){
     return ENPROC;

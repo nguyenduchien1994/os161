@@ -31,6 +31,7 @@
 #include <lib.h>
 #include <spinlock.h>
 #include <vm.h>
+#include <proc.h>
 
 /*
  * Kernel malloc.
@@ -783,14 +784,14 @@ subpage_stats(struct pageref *pr)
 	kprintf("at 0x%08lx: size %-4lu  %u/%u free\n",
 		(unsigned long)prpage, (unsigned long) sizes[blktype],
 		(unsigned) pr->nfree, n);
-	kprintf("   ");
+	/*	kprintf("   ");
 	for (i=0; i<n; i++) {
 		int val = (freemap[i/32] & (1<<(i%32)))!=0;
 		kprintf("%c", val ? '.' : '*');
 		if (i%64==63 && i<n-1) {
 			kprintf("\n   ");
 		}
-	}
+		}*/
 	kprintf("\n");
 }
 
@@ -1192,11 +1193,19 @@ kmalloc(size_t sz)
 		return (void *)address;
 	}
 
+	void* ret;
 #ifdef LABELS
-	return subpage_kmalloc(sz, label);
+	ret = subpage_kmalloc(sz, label);
 #else
-	return subpage_kmalloc(sz);
+	ret =  subpage_kmalloc(sz);
 #endif
+	if(vm_inited && verbose_alloc){
+	  kprintf("\nAllocated %d bytes at 0x%x\n", sz, (unsigned)ret);
+	  //kheap_printstats();
+	}
+
+
+	return ret;
 }
 
 /*
@@ -1205,7 +1214,8 @@ kmalloc(size_t sz)
 void
 kfree(void *ptr)
 {
-	/*
+	
+        /*
 	 * Try subpage first; if that fails, assume it's a big allocation.
 	 */
 	if (ptr == NULL) {
@@ -1213,6 +1223,10 @@ kfree(void *ptr)
 	} else if (subpage_kfree(ptr)) {
 		KASSERT((vaddr_t)ptr%PAGE_SIZE==0);
 		free_kpages((vaddr_t)ptr);
+	}
+	if(verbose_alloc){
+	  kprintf("\nFreed at 0x%x\n", (unsigned)ptr);
+	  //kheap_printstats();
 	}
 }
 

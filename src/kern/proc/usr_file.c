@@ -77,8 +77,20 @@ file_list* file_list_create(void)
 void file_list_destroy(file_list *fl)
 {
   KASSERT(fl != NULL);
+  
+  Linked_List_Node *runner = fl->files->first;
+  while(runner != NULL){
+    open_file_decref((open_file*)runner->data);
+    runner = runner->next;
+  }
   linkedlist_destroy(fl->files);
-  linkedlist_destroy(fl->available);
+  
+  runner = fl->available->first;
+  while(runner != NULL){
+    kfree(runner->data);
+    runner = runner->next;
+  }
+  stack_destroy(fl->available);
   kfree(fl);
 }
 /*

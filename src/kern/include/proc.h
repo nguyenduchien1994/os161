@@ -205,6 +205,12 @@ struct proc *proc_create_runprogram(const char *name);
 /* Destroy a process. */
 void proc_destroy(struct proc *proc);
 
+/* Partially destroy a process. */
+void proc_shutdown(struct proc *proc);
+
+/* Completey destroy the user process */
+void usr_proc_destroy(struct proc *proc);
+
 /* Attach a thread to a process. Must not already have a process. */
 int proc_addthread(struct proc *proc, struct thread *t);
 

@@ -8,29 +8,15 @@
 
 void _exit(int exitcode)
 {
-  lock_acquire(curproc->exit_lock);
-  lock_acquire(glbl_mngr->file_sys_lk);
-
-  Linked_List *files = curproc->open_files->files; 
-  Linked_List_Node *runner = files->first;
-
-  while(runner != NULL)
-  {
-    open_file_decref(runner->data);
-    runner = runner->next;
-  }
-
-  runner = curproc->children->first;
-  while(runner != NULL){
-    ((proc*)runner->data)->parent = NULL;
-    runner = runner->next;
-  }
- 
-  lock_release(glbl_mngr->file_sys_lk);
   lock_acquire(glbl_mngr->proc_sys_lk);
 
+  proc_shutdown(curproc);
+  curproc->cur_state = dead; 
+
+  lock_acquire(curproc->exit_lock);
+
   if(curproc->parent){
-    runner = curproc->parent->children->first;
+    Linked_List_Node *runner = curproc->parent->children->first;
     bool found_in_parent = false;
     while(runner != NULL && !found_in_parent){
       if(runner->data == curproc){
@@ -43,9 +29,9 @@ void _exit(int exitcode)
     }
     KASSERT(found_in_parent);
   }
+  lock_release(glbl_mngr->proc_sys_lk);
 
   curproc->exit_status = exitcode;
-  curproc->cur_state = dead;
   cv_broadcast(curproc->exit_cv, curproc->exit_lock);
   P(curproc->exit_sem);
   lock_release(curproc->exit_lock);

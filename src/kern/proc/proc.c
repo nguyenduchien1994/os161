@@ -102,32 +102,32 @@ proc_create(const char *name)
 	
 	proc->children = linkedlist_create();
 	if(proc->children == NULL){
-	  kfree(proc->open_files);
+	  file_list_destroy(proc->open_files);
 	  kfree(proc->p_name);
 	  kfree(proc);
 	}
 
 	proc->exit_lock = lock_create("exit");
 	if(proc->exit_lock == NULL){
-	  kfree(proc->children);
-	  kfree(proc->open_files);
+	  linkedlist_destroy(proc->children);
+	  file_list_destroy(proc->open_files);
 	  kfree(proc->p_name);
 	  kfree(proc);
 	}
 	proc->exit_cv = cv_create("exit");
 	if(proc->exit_cv == NULL){
-	  kfree(proc->exit_lock);
-	  kfree(proc->children);
-	  kfree(proc->open_files);
+	  lock_destroy(proc->exit_lock);
+	  linkedlist_destroy(proc->children);
+	  file_list_destroy(proc->open_files);
 	  kfree(proc->p_name);
 	  kfree(proc);
 	}
 	proc->exit_sem = sem_create("exit", 1);
 	if(proc->exit_sem == NULL){
-	  kfree(proc->exit_cv);
-	  kfree(proc->exit_lock);
-	  kfree(proc->children);
-	  kfree(proc->open_files);
+	  cv_destroy(proc->exit_cv);
+	  lock_destroy(proc->exit_lock);
+	  linkedlist_destroy(proc->children);
+	  file_list_destroy(proc->open_files);
 	  kfree(proc->p_name);
 	  kfree(proc);
 	}
@@ -151,7 +151,7 @@ void proc_destroy(struct proc *proc)
 	 * do, some don't.
 	 */
 
-	KASSERT(proc != NULL);
+        KASSERT(proc != NULL);
 	KASSERT(proc != kproc);
 
 	/*
@@ -228,6 +228,62 @@ void proc_destroy(struct proc *proc)
 	
 	kfree(proc->p_name);
 	kfree(proc);
+}
+
+/*
+ * Partially destroy a process, except for the exit status, locks and memory deallocation
+ */
+void proc_shutdown(struct proc *proc)
+{ 
+        KASSERT(proc != NULL);
+	KASSERT(proc != kproc);
+
+	/* VFS fields */
+	if (proc->p_cwd) {
+		VOP_DECREF(proc->p_cwd);
+		proc->p_cwd = NULL;
+	}
+
+	/* VM fields */
+	if (proc->p_addrspace) {
+		struct addrspace *as;
+
+		if (proc == curproc) {
+			as = proc_setas(NULL);
+			as_deactivate();
+		}
+		else {
+			as = proc->p_addrspace;
+			proc->p_addrspace = NULL;
+		}
+		as_destroy(as);
+	}
+
+	Linked_List_Node *runner = proc->children->first;
+	while(runner != NULL)
+	{
+	  ((struct proc*)runner->data)->parent = NULL;
+	  runner = runner->next;
+	}
+
+	file_list_destroy(proc->open_files);
+	linkedlist_destroy(proc->children);
+
+	kfree(proc->context);
+}
+
+void usr_proc_destroy (struct proc *proc)
+{
+  spinlock_cleanup(&proc->p_lock);
+
+  lock_destroy(proc->exit_lock);
+  cv_destroy(proc->exit_cv);
+  sem_destroy(proc->exit_sem);
+
+  proc_mngr_remove(glbl_mngr, proc->pid);
+       
+  kfree(proc->p_name);
+  kfree(proc);
 }
 
 /*
@@ -441,41 +497,7 @@ void set_state(proc *p, state s)
 }
 
 void copy_context(struct trapframe* tf){
-  tf->tf_vaddr = curproc->context->tf_vaddr;
-  tf->tf_status = curproc->context->tf_status;
-  tf->tf_cause = curproc->context->tf_cause;
-  tf->tf_lo = curproc->context->tf_lo;
-  tf->tf_hi = curproc->context->tf_hi;
-  tf->tf_ra = curproc->context->tf_ra;
-  tf->tf_at = curproc->context->tf_at;
-  tf->tf_v0 = curproc->context->tf_v0;
-  tf->tf_v1 = curproc->context->tf_v1;
-  tf->tf_a0 = curproc->context->tf_a0;
-  tf->tf_a1 = curproc->context->tf_a1;
-  tf->tf_a2 = curproc->context->tf_a2;
-  tf->tf_a3 = curproc->context->tf_a3;
-  tf->tf_t0 = curproc->context->tf_t0;
-  tf->tf_t1 = curproc->context->tf_t1;
-  tf->tf_t2 = curproc->context->tf_t2;
-  tf->tf_t3 = curproc->context->tf_t3;
-  tf->tf_t4 = curproc->context->tf_t4;
-  tf->tf_t5 = curproc->context->tf_t5;
-  tf->tf_t6 = curproc->context->tf_t6;
-  tf->tf_t7 = curproc->context->tf_t7;
-  tf->tf_t8 = curproc->context->tf_t8;
-  tf->tf_t9 = curproc->context->tf_t9;
-  tf->tf_s0 = curproc->context->tf_s0;
-  tf->tf_s1 = curproc->context->tf_s1;
-  tf->tf_s2 = curproc->context->tf_s2;
-  tf->tf_s3 = curproc->context->tf_s3;
-  tf->tf_s4 = curproc->context->tf_s4;
-  tf->tf_s5 = curproc->context->tf_s5;
-  tf->tf_s6 = curproc->context->tf_s6;
-  tf->tf_s7 = curproc->context->tf_s7;
-  tf->tf_gp = curproc->context->tf_gp;
-  tf->tf_sp = curproc->context->tf_sp;
-  tf->tf_s8 = curproc->context->tf_s8;
-  tf->tf_epc = curproc->context->tf_epc;
+  memcpy(tf, curproc->context, sizeof(struct trapframe));
 }
 
 proc* proc_copy(void)

@@ -56,6 +56,7 @@ int execv(const char *program, char **args)
        runner = runner + 1;
      }
    }
+   kfree(progdest);
 
    lock_acquire(glbl_mngr->proc_sys_lk);
 
