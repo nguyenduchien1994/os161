@@ -79,9 +79,10 @@ int open(const char *filename, int flags)
    }
 
    open_file *openfile = open_file_create(file, 0, flags); 
-   err = file_list_add(curproc->open_files, openfile);   
+   //err = 
+   file_list_add(curproc->open_files, openfile);   
    kfree(namedest);
-   if(err == -1){
+   if(err){
      kfree(file);
    }
 

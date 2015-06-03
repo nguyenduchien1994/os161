@@ -114,13 +114,13 @@ dowait(int nowait, int pid)
 
 	if (!nowait) {
 		if (waitpid(pid, &x, 0)<0) {
-			warn("waitpid");
+		  //warn("waitpid");
 		}
 		else if (WIFSIGNALED(x)) {
-			warnx("pid %d: signal %d", pid, WTERMSIG(x));
+		  //warnx("pid %d: signal %d", pid, WTERMSIG(x));
 		}
 		else if (WEXITSTATUS(x) != 0) {
-			warnx("pid %d: exit %d", pid, WEXITSTATUS(x));
+		  //warnx("pid %d: exit %d", pid, WEXITSTATUS(x));
 		}
 	}
 }
@@ -170,6 +170,9 @@ int
 main(int argc, char *argv[])
 {
 	int nowait=0;
+
+        //int nowait=0;
+        //int nowait=0;
 
 	if (argc==2 && !strcmp(argv[1], "-w")) {
 		nowait=1;

@@ -92,13 +92,16 @@ int proc_mngr_add(proc_mngr *this, proc *p, struct thread *t)
   return pid;
 }
 
-void proc_mngr_remove(proc_mngr *this, pid_t pid)
+proc *proc_mngr_remove(proc_mngr *this, pid_t pid)
 {
+  proc *ret = *(this->procs + pid*(sizeof(proc*)));
+  
   *(this->procs + pid*(sizeof(proc*))) = NULL;
   
   int *to_push = kmalloc(sizeof(int));
   *to_push = pid;
   stack_push(this->free_ids, to_push);
+  return ret;
 }
 
 struct thread* proc_mngr_get_thread(proc_mngr *this, proc *p)
