@@ -37,7 +37,7 @@ int open(const char *filename, int flags)
 
 
    // 3 eqauls invalid or if over 64 (1000000)
-   if(((flags & 3) == 3) || flags < 1000000)
+   if(((flags & 3) == 3) || flags > 64)
    {
      kfree(namedest);
      lock_release(glbl_mngr->file_sys_lk);
@@ -81,7 +81,7 @@ int open(const char *filename, int flags)
    open_file *openfile = open_file_create(file, 0, flags); 
    err = file_list_add(curproc->open_files, openfile);   
    kfree(namedest);
-   if(err){
+   if(err == -1){
      kfree(file);
    }
 

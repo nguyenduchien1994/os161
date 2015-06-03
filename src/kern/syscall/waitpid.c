@@ -11,26 +11,28 @@ int waitpid(pid_t pid, int *status, int options, pid_t *ret)
   lock_acquire(glbl_mngr->proc_sys_lk);
   struct proc* myproc = proc_mngr_get_from_pid(glbl_mngr, pid);
   
-  if(options != 0)
+
+  if (status == NULL) //include error check for status
+  {
+    lock_release(glbl_mngr->proc_sys_lk);
+    return EFAULT;
+  }
+  else if(options != 0)
   {
     lock_release(glbl_mngr->proc_sys_lk);
     return EINVAL;
-  }
+  } 
   else if(myproc == NULL || myproc->cur_state == dead)
   {
     lock_release(glbl_mngr->proc_sys_lk);
     return ESRCH;
   }
-  //include error check for status
-  else if (status == NULL)
-  {
-    lock_release(glbl_mngr->proc_sys_lk);
-    return EFAULT;
-  }
+  
   else if (pid < PID_MIN)
   {
     lock_release(glbl_mngr->proc_sys_lk);
-    return EINVAL;
+    //return EINVAL;
+    return ESRCH;
   }
   else if (pid > PID_MAX)
   {

@@ -127,7 +127,8 @@ big_file(int size)
 	printf("[BIGFILE] test starting :\n");
 	printf("\tCreating a file of size: %d\n", size);
 
-	fileid = open(BIGFILE_NAME, O_WRONLY|O_CREAT|O_TRUNC, 0664);
+	//fileid = open(BIGFILE_NAME, O_WRONLY|O_CREAT|O_TRUNC, 0664);
+	fileid = open(BIGFILE_NAME, O_WRONLY|O_CREAT|O_TRUNC);
 	if (fileid < 0) {
 		err(1, "[BIGFILE]: %s: open for write", BIGFILE_NAME);
 	}

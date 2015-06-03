@@ -75,14 +75,14 @@ check(void)
 	int i;
 
 	mypid = getpid();
-
+	
 	/* Make sure each fork has its own address space. */
 	for (i=0; i<800; i++) {
 		volatile int seenpid;
 		seenpid = mypid;
 		if (seenpid != getpid()) {
 			errx(1, "pid mismatch (%d, should be %d) "
-			     "- your vm is broken!",
+			     "- your vm is broken!", 
 			     seenpid, getpid());
 		}
 	}
@@ -142,16 +142,16 @@ test(int nowait)
 	 */
 
 	pid0 = dofork();
-	//putchar('0');
+	putchar('0');
 	check();
 	pid1 = dofork();
-	//putchar('1');
+	putchar('1');
 	check();
 	pid2 = dofork();
-	//putchar('2');
+	putchar('2');
 	check();
 	pid3 = dofork();
-	//putchar('3');
+	putchar('3');
 	check();
 
 	/*
@@ -163,14 +163,12 @@ test(int nowait)
 	dowait(nowait, pid1);
 	dowait(nowait, pid0);
 
-	//putchar('\n');
+	putchar('\n');
 }
 
 int
 main(int argc, char *argv[])
 {
-	static const char expected[] =
-		"|----------------------------|\n";
 	int nowait=0;
 
 	if (argc==2 && !strcmp(argv[1], "-w")) {
@@ -180,11 +178,10 @@ main(int argc, char *argv[])
 		warnx("usage: forktest [-w]");
 		return 1;
 	}
-	warnx("Starting. Expect this many:");
-	write(STDERR_FILENO, expected, strlen(expected));
+	warnx("Starting.");
 
 	test(nowait);
 
-	//warnx("Complete.");
+	warnx("Complete.");
 	return 0;
 }

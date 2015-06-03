@@ -143,7 +143,7 @@ boot(void)
 
 	vm_inited = true;
 	//verbose_alloc = false;
-	verbose_alloc = true;
+	//verbose_alloc = true;
 }
 
 /*
