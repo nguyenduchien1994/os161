@@ -800,7 +800,7 @@ thread_exit(void)
   /* Interrupts off on this processor */
   splhigh();
   if(pid != kproc->pid){
-    proc *toDestroy = proc_mngr_get_from_pid(glbl_mngr, pid);
+    proc *toDestroy = proc_mngr_remove(glbl_mngr, pid);
     usr_proc_destroy(toDestroy);
   }
      

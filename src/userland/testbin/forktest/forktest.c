@@ -75,14 +75,14 @@ check(void)
 	int i;
 
 	mypid = getpid();
-
+	
 	/* Make sure each fork has its own address space. */
 	for (i=0; i<800; i++) {
 		volatile int seenpid;
 		seenpid = mypid;
 		if (seenpid != getpid()) {
 			errx(1, "pid mismatch (%d, should be %d) "
-			     "- your vm is broken!",
+			     "- your vm is broken!", 
 			     seenpid, getpid());
 		}
 	}
@@ -114,13 +114,13 @@ dowait(int nowait, int pid)
 
 	if (!nowait) {
 		if (waitpid(pid, &x, 0)<0) {
-			warn("waitpid");
+		  //warn("waitpid");
 		}
 		else if (WIFSIGNALED(x)) {
-			warnx("pid %d: signal %d", pid, WTERMSIG(x));
+		  //warnx("pid %d: signal %d", pid, WTERMSIG(x));
 		}
 		else if (WEXITSTATUS(x) != 0) {
-			warnx("pid %d: exit %d", pid, WEXITSTATUS(x));
+		  //warnx("pid %d: exit %d", pid, WEXITSTATUS(x));
 		}
 	}
 }
@@ -163,15 +163,14 @@ test(int nowait)
 	dowait(nowait, pid1);
 	dowait(nowait, pid0);
 
-	//putchar('\n');
+	putchar('\n');
 }
 
 int
 main(int argc, char *argv[])
 {
-	static const char expected[] =
-		"|----------------------------|\n";
-	int nowait=0;
+        //int nowait=0;
+        int nowait=0;
 
 	if (argc==2 && !strcmp(argv[1], "-w")) {
 		nowait=1;
@@ -180,11 +179,10 @@ main(int argc, char *argv[])
 		warnx("usage: forktest [-w]");
 		return 1;
 	}
-	warnx("Starting. Expect this many:");
-	write(STDERR_FILENO, expected, strlen(expected));
+	warnx("Starting.");
 
 	test(nowait);
 
-	//warnx("Complete.");
+	warnx("Complete.");
 	return 0;
 }

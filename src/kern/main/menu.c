@@ -85,7 +85,10 @@ cmd_progthread(void *ptr, unsigned long nargs)
 		kprintf("Warning: argument passing from menu not supported\n");
 	}
 	
-	proc_mngr_add(glbl_mngr, curproc, curthread);
+	
+	if(proc_mngr_add(glbl_mngr, curproc, curthread) < 2){
+	  panic("Unable to start any user processes");
+	}
 
 	/* Hope we fit. */
 	KASSERT(strlen(args[0]) < sizeof(progname));

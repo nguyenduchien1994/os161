@@ -185,7 +185,7 @@ proc_mngr* proc_mngr_create(void);
 void proc_mngr_destroy(proc_mngr *ptr);
 
 int proc_mngr_add(proc_mngr *this, proc *p, struct thread *t);
-void proc_mngr_remove(proc_mngr *this, pid_t p);
+proc* proc_mngr_remove(proc_mngr *this, pid_t p);
 
 struct thread* proc_mngr_get_thread(proc_mngr *this, proc *p);
 proc* proc_mngr_get_from_pid(proc_mngr *this, pid_t pid);

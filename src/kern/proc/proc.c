@@ -224,8 +224,6 @@ void proc_destroy(struct proc *proc)
 	cv_destroy(proc->exit_cv);
 	sem_destroy(proc->exit_sem);
 
-	proc_mngr_remove(glbl_mngr, proc->pid);
-	
 	kfree(proc->p_name);
 	kfree(proc);
 }
@@ -279,8 +277,6 @@ void usr_proc_destroy (struct proc *proc)
   lock_destroy(proc->exit_lock);
   cv_destroy(proc->exit_cv);
   sem_destroy(proc->exit_sem);
-
-  proc_mngr_remove(glbl_mngr, proc->pid);
        
   kfree(proc->p_name);
   kfree(proc);
@@ -334,7 +330,8 @@ proc_create_runprogram(const char *name)
 	
 	if(glbl_mngr == NULL){
 	  glbl_mngr = proc_mngr_create();
-	}
+	} 
+
 
 	if (kproc != NULL && kproc->open_files->files->first == NULL) {  
 	  struct vnode *console_node = kmalloc(sizeof(struct vnode));
