@@ -33,6 +33,7 @@ void _exit(int exitcode)
 
   curproc->exit_status = exitcode;
   cv_broadcast(curproc->exit_cv, curproc->exit_lock);
+
   lock_release(curproc->exit_lock);
   P(curproc->exit_sem);
 

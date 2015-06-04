@@ -59,6 +59,7 @@ int read(int fd, void *buf, size_t buflen, ssize_t *ret)
 	*ret = buflen - read_uio.uio_resid;
 	to_read->offset = read_uio.uio_offset; 
       }
+      open_file_decref(to_read);
       lock_release(to_read->file_lk);
     }
   }

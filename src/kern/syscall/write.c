@@ -45,6 +45,7 @@ int write(int fd, const void *buf, size_t nbytes, ssize_t *ret)
       }
       lock_release(f->file_lk);
     }
+    open_file_decref(f);
   }
   return err;
 }

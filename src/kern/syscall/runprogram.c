@@ -114,6 +114,7 @@ runprogram(char *progname)
 	  openfile = open_file_create(console_node, 0, O_WRONLY); 
 	  file_list_add(kproc->open_files, openfile); //making STD_OUT = 1
 	  file_list_add(kproc->open_files, openfile); //making STD_ERR = 2
+	  open_file_decref(openfile);
 	}
 	/* Warp to user mode. */
 	enter_new_process(0 /*argc*/, NULL /*userspace addr of argv*/,

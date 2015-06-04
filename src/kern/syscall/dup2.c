@@ -39,6 +39,8 @@ int dup2(int oldfd, int newfd, int *ret)
   else
   {
     int err = file_list_insert(curproc -> open_files, to_dup, newfd);
+    open_file_decref(to_dup);
+
     lock_release(glbl_mngr->file_sys_lk);
     if (err == -1)
     {

@@ -21,7 +21,7 @@ open_file* open_file_create(struct vnode *file, off_t init_offset, int flags)
   VOP_INCREF(file);
   ret->vfile = file;
   ret->offset = init_offset;
-  ret->refcount = 0;
+  ret->refcount = 1;
   ret->flags = flags;
   return ret;
 }
@@ -225,6 +225,7 @@ open_file *file_list_get(file_list *fl, int fd)
   }
   else
   {
+    open_file_incref((open_file*)node->data);
     return node -> data;
   }
 }
@@ -241,7 +242,7 @@ open_file *file_list_remove(file_list *fl, int fd)
   else
   {      
     open_file *ret = linkedlist_remove(fl -> files, fd);
-    
+
     int *to_push = kmalloc(sizeof(int));
     if(to_push == NULL){
       return NULL;

@@ -95,7 +95,8 @@ __printerr(int use_errno, const char *fmt, va_list ap)
 		prog = __argv[0];
 	}
 	else {
-		prog = "(program name unknown)";
+	  //prog = "(program name unknown)";
+	  prog = "";
 	}
 
 	/* print the program name */

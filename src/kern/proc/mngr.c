@@ -44,6 +44,12 @@ proc_mngr* proc_mngr_create(void)
   ret->proc_sys_lk = lock_create("proc syscall lock");
   KASSERT(ret->proc_sys_lk != NULL);  
 
+  ret->write_lk = lock_create("con out lock");
+  KASSERT(ret->write_lk != NULL);
+
+  ret->read_lk = lock_create("con in lock");
+  KASSERT(ret->read_lk != NULL);
+
   return ret;
 }
 
@@ -51,6 +57,8 @@ void proc_mngr_destroy(proc_mngr *ptr)
 {
   KASSERT(ptr != NULL);
 
+  kfree(ptr->write_lk);
+  kfree(ptr->read_lk);
   kfree(ptr->proc_sys_lk);
   kfree(ptr->file_sys_lk);
   kfree(ptr->run_lk);

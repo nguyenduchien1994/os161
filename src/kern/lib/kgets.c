@@ -30,6 +30,8 @@
 
 #include <types.h>
 #include <lib.h>
+#include <proc.h>
+#include <synch.h>
 
 /*
  * Do a backspace in typed input.
@@ -53,7 +55,12 @@ backsp(void)
 void
 kgets(char *buf, size_t maxlen)
 {
-	size_t pos = 0;
+  int mngr_lk = false;
+  if(glbl_mngr){
+    lock_acquire(glbl_mngr->read_lk);
+    mngr_lk = true;
+  }
+  size_t pos = 0;
 	int ch;
 
 	while (1) {
@@ -110,4 +117,6 @@ kgets(char *buf, size_t maxlen)
 	}
 
 	buf[pos] = 0;
+	if(mngr_lk)
+	  lock_release(glbl_mngr->read_lk);
 }

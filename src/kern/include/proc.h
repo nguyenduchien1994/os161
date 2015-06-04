@@ -137,6 +137,8 @@ typedef struct proc_mngr{
   int next_pid;
   struct lock *file_sys_lk;
   struct lock *proc_sys_lk;
+  struct lock *write_lk;
+  struct lock *read_lk;
 } proc_mngr;
 
 proc_mngr *glbl_mngr;

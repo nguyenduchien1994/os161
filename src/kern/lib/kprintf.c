@@ -39,7 +39,7 @@
 #include <mainbus.h>
 #include <vfs.h>          // for vfs_sync()
 #include <lamebus/ltrace.h> // for ltrace_stop()
-
+#include <proc.h>
 
 /* Flags word for DEBUG() macro. */
 uint32_t dbflags = 0;
@@ -105,8 +105,13 @@ kprintf(const char *fmt, ...)
 		&& curthread->t_curspl == 0
 		&& curcpu->c_spinlocks == 0;
 
+	bool mngr_lk = false;
 	if (dolock) {
 		lock_acquire(kprintf_lock);
+		if(glbl_mngr){
+		  lock_acquire(glbl_mngr->write_lk);
+		  mngr_lk = true;
+		}
 	}
 	else {
 		spinlock_acquire(&kprintf_spinlock);
@@ -118,6 +123,9 @@ kprintf(const char *fmt, ...)
 
 	if (dolock) {
 		lock_release(kprintf_lock);
+		if(mngr_lk){
+		  lock_release(glbl_mngr->write_lk);
+		}
 	}
 	else {
 		spinlock_release(&kprintf_spinlock);

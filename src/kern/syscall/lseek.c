@@ -54,6 +54,7 @@ int lseek(int fd, off_t pos, int whence, off_t *ret)
   }
 
   f->offset = init;
+  open_file_decref(f);
   *ret = init;
 
   lock_release(glbl_mngr->file_sys_lk);

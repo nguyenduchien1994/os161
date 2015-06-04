@@ -27,6 +27,6 @@ int __getcwd(char *buf, size_t buflen, int *ret)
   int err = vfs_getcwd(&name_uio);
   *ret = name_uio.uio_offset;
 
-  lock_release(glbl_mngr->proc_sys_lk);
+  lock_release(glbl_mngr->file_sys_lk);
   return err;
 }

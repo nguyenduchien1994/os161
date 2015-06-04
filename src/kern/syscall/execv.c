@@ -21,9 +21,10 @@ int execv(const char *program, char **args)
    }
 
    char** progdest = kmalloc(sizeof(ARG_MAX));
-   if(progdest == NULL)
+   if(progdest == NULL){
      kfree(progdest);
      return ENOMEM;
+   }
 
    int err = copyin((const_userptr_t)program, progdest, sizeof(program));
 
@@ -71,9 +72,6 @@ int execv(const char *program, char **args)
      lock_release(glbl_mngr->proc_sys_lk);   
      return result;
    }
-   
-   /* We should be a new process. */
-   KASSERT(proc_getas() == NULL);
    
    /* Create a new address space. */
    as = as_create();
