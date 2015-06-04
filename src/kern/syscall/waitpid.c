@@ -9,12 +9,15 @@
 
 int waitpid(pid_t pid, int *status, int options, pid_t *ret)
 { 
-  if(status == NULL)
-    return EFAULT;
+  
+  //if(status == NULL)
+  //return EFAULT;
   if(pid < PID_MIN)
-    return EINVAL;
-  if(pid > PID_MAX || options != 0)
     return ESRCH;
+  if(pid > PID_MAX)
+    return ESRCH;
+  if(options != 0)
+    return EINVAL;
 
   lock_acquire(glbl_mngr->proc_sys_lk);
   struct proc* myproc = proc_mngr_get_from_pid(glbl_mngr, pid);
@@ -34,7 +37,8 @@ int waitpid(pid_t pid, int *status, int options, pid_t *ret)
   lock_release(glbl_mngr->proc_sys_lk);
   cv_wait(myproc->exit_cv, myproc->exit_lock);
   
-  *status = myproc->exit_status;
+  if(status != NULL)
+    *status = myproc->exit_status;
   V(myproc->exit_sem);
   
   lock_release(myproc->exit_lock);
