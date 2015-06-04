@@ -5,6 +5,7 @@
 #include <synch.h>
 #include <linkedlist.h>
 #include <current.h>
+#include <kern/wait.h>
 
 void _exit(int exitcode)
 {
@@ -31,7 +32,7 @@ void _exit(int exitcode)
   lock_acquire(curproc->exit_lock);
   lock_release(glbl_mngr->proc_sys_lk);
 
-  curproc->exit_status = exitcode;
+  curproc->exit_status = _MKWAIT_EXIT(exitcode);
   cv_broadcast(curproc->exit_cv, curproc->exit_lock);
 
   lock_release(curproc->exit_lock);
