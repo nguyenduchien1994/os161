@@ -21,21 +21,21 @@ int write(int fd, const void *buf, size_t nbytes, ssize_t *ret)
 
   if (buf == NULL)
   {
-    return EBADF;
+    return EFAULT;
   }
 
   int err = 0;
   lock_acquire(glbl_mngr->file_sys_lk);
-  open_file *f = file_list_get(((proc*)curproc)->open_files, fd);
+  open_file *f = file_list_get(curproc->open_files, fd);
+  lock_release(glbl_mngr->file_sys_lk);
+
   if(f == NULL)
   {
-    lock_release(glbl_mngr->file_sys_lk);
     return EBADF;
   }
   else{
     if(f->flags & O_RDONLY)
     {
-      lock_release(glbl_mngr->file_sys_lk);
       return EBADF;
     }
     else{
@@ -54,8 +54,8 @@ int write(int fd, const void *buf, size_t nbytes, ssize_t *ret)
       
       while(!err && write_uio.uio_resid)
       {
-	//err = VOP_WRITE(f->vfile,&write_uio);
-	err = f->vfile->vn_ops->vop_write(f->vfile, &write_uio);
+	err = VOP_WRITE(f->vfile,&write_uio);
+	//err = f->vfile->vn_ops->vop_write(f->vfile, &write_uio);
 	
 	*ret = nbytes - write_uio.uio_resid;
 	f->offset = write_uio.uio_offset;
@@ -64,6 +64,5 @@ int write(int fd, const void *buf, size_t nbytes, ssize_t *ret)
     }
     open_file_decref(f);
   }
-  lock_release(glbl_mngr->file_sys_lk);
   return err;
 }

@@ -21,24 +21,23 @@ int read(int fd, void *buf, size_t buflen, ssize_t *ret)
 
   if (buf == NULL)
   {
-    return EBADF;
+    return EFAULT;
   }
   
   int err = 0;
   lock_acquire(glbl_mngr->file_sys_lk);
 
   open_file *to_read = file_list_get(((proc*)curproc)->open_files,fd);
+  lock_release(glbl_mngr->file_sys_lk);
 
   if (to_read == NULL)
   {
-    lock_release(glbl_mngr->file_sys_lk);
     return EBADF;
   }
   else
   {
     if (to_read->flags & O_WRONLY)
     {
-      lock_release(glbl_mngr->file_sys_lk);
       return EBADF;
     } 
     else
@@ -55,8 +54,8 @@ int read(int fd, void *buf, size_t buflen, ssize_t *ret)
       
       while (!err && read_uio.uio_resid)
       {
-	//err = VOP_READ(to_read->vfile,&read_uio);
-	err = to_read->vfile->vn_ops->vop_read(to_read->vfile,&read_uio);
+	err = VOP_READ(to_read->vfile,&read_uio);
+	//err = to_read->vfile->vn_ops->vop_read(to_read->vfile,&read_uio);
 	*ret = buflen - read_uio.uio_resid;
 	to_read->offset = read_uio.uio_offset; 
       }
@@ -64,6 +63,5 @@ int read(int fd, void *buf, size_t buflen, ssize_t *ret)
       lock_release(to_read->file_lk);
     }
   }
-  lock_release(glbl_mngr->file_sys_lk);
   return err;
 }
