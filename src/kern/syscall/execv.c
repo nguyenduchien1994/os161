@@ -22,12 +22,14 @@ int execv(const char *program, char **args)
 
    char** progdest = kmalloc(sizeof(ARG_MAX));
    if(progdest == NULL)
+     kfree(progdest);
      return ENOMEM;
 
    int err = copyin((const_userptr_t)program, progdest, sizeof(program));
 
    if (err)
    {
+     kfree(progdest);
       return EIO;
    }
 
@@ -66,7 +68,7 @@ int execv(const char *program, char **args)
    /* Open the file. */
    result = vfs_open((char*)program, O_RDONLY, 0, &v);
    if (result) {
-     lock_release(glbl_mngr->proc_sys_lk);
+     lock_release(glbl_mngr->proc_sys_lk);   
      return result;
    }
    

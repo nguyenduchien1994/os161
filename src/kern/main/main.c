@@ -142,7 +142,7 @@ boot(void)
 	COMPILE_ASSERT(sizeof(*(userptr_t)0) == sizeof(char));
 
 	vm_inited = true;
-	verbose_alloc = false;
+	//verbose_alloc = false;
 	//verbose_alloc = true;
 }
 
