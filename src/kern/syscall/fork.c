@@ -88,14 +88,26 @@ int fork(pid_t *pret)
   //kheap_printstats();
 
   //kprintf("proc: %d", sizeof(proc));
+  
+  lock_acquire(glbl_mngr->proc_sys_lk);
 
   proc *child = proc_copy();
   int err = 0;
   if(child == NULL){
+    lock_release(glbl_mngr->proc_sys_lk);
     return ENOMEM;
   }
 
+  err = as_copy(curproc->p_addrspace, &child->p_addrspace);
+  
+  if(err){
+    lock_release(glbl_mngr->proc_sys_lk);
+    new_proc_destroy(child);
+    return err;
+  }
   err = linkedlist_prepend(curproc->children, child);
+
+  lock_release(glbl_mngr->proc_sys_lk);
 
   if(err){
     new_proc_destroy(child);
@@ -103,12 +115,6 @@ int fork(pid_t *pret)
   }
   child->parent = curproc;
   
-  err = as_copy(curproc->p_addrspace, &child->p_addrspace);
-  
-  if(err){
-    new_proc_destroy(child);
-    return err;
-  }
 
   fork_params *fp = kmalloc(sizeof(struct fork_params));
   if(fp == NULL){

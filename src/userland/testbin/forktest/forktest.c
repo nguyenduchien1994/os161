@@ -114,13 +114,13 @@ dowait(int nowait, int pid)
 
 	if (!nowait) {
 		if (waitpid(pid, &x, 0)<0) {
-		  //warn("waitpid");
+		  warn("waitpid");
 		}
 		else if (WIFSIGNALED(x)) {
-		  //warnx("pid %d: signal %d", pid, WTERMSIG(x));
+		  warnx("pid %d: signal %d", pid, WTERMSIG(x));
 		}
 		else if (WEXITSTATUS(x) != 0) {
-		  //warnx("pid %d: exit %d", pid, WEXITSTATUS(x));
+		  warnx("pid %d: exit %d", pid, WEXITSTATUS(x));
 		}
 	}
 }
@@ -142,16 +142,16 @@ test(int nowait)
 	 */
 
 	pid0 = dofork();
-	//putchar('0');
+	putchar('0');
 	check();
 	pid1 = dofork();
-	//putchar('1');
+	putchar('1');
 	check();
 	pid2 = dofork();
-	//putchar('2');
+	putchar('2');
 	check();
 	pid3 = dofork();
-	//putchar('3');
+	putchar('3');
 	check();
 
 	/*

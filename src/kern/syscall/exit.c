@@ -13,8 +13,6 @@ void _exit(int exitcode)
   proc_shutdown(curproc);
   curproc->cur_state = dead; 
 
-  lock_acquire(curproc->exit_lock);
-
   if(curproc->parent){
     Linked_List_Node *runner = curproc->parent->children->first;
     bool found_in_parent = false;
@@ -29,12 +27,15 @@ void _exit(int exitcode)
     }
     KASSERT(found_in_parent);
   }
+
+  lock_acquire(curproc->exit_lock);
   lock_release(glbl_mngr->proc_sys_lk);
 
   curproc->exit_status = exitcode;
   cv_broadcast(curproc->exit_cv, curproc->exit_lock);
-  P(curproc->exit_sem);
   lock_release(curproc->exit_lock);
+  P(curproc->exit_sem);
 
+  //kprintf("\nExiting: %u\n", curproc->pid);
   thread_exit();
 }
