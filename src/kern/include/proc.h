@@ -56,9 +56,10 @@ typedef enum state{
 } state;
 
 typedef enum run_type{
-  kernel,
-  interactive,
-  background
+  INTERACTIVE_U,
+  INTERACTIVE_K,
+  BACKGROUND_U,
+  BACKGROUND_K
 } run_type;
 
 /*
@@ -133,7 +134,7 @@ typedef struct proc_mngr{
   struct thread **threads;//256 array
   multi_queue *ready_queue;
   stack *free_ids;
-  struct lock *run_lk;
+  struct spinlock run_lk;
   int next_pid;
   struct lock *file_sys_lk;
   struct lock *proc_sys_lk;
@@ -142,6 +143,7 @@ typedef struct proc_mngr{
 } proc_mngr;
 
 proc_mngr *glbl_mngr;
+bool user_init;
 
 struct spinlock syscall_lock;
 
@@ -192,7 +194,7 @@ proc* proc_mngr_remove(proc_mngr *this, pid_t p);
 struct thread* proc_mngr_get_thread(proc_mngr *this, proc *p);
 proc* proc_mngr_get_from_pid(proc_mngr *this, pid_t pid);
 
-void proc_mngr_make_ready(proc_mngr *this, proc *p);
+void proc_mngr_make_ready(proc_mngr *this, struct thread *t);
 
 
 /* This is the process structure for the kernel and for kernel-only threads. */

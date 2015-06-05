@@ -23,6 +23,10 @@ int read(int fd, void *buf, size_t buflen, ssize_t *ret)
   {
     return EFAULT;
   }
+
+  if(fd < 2){
+    curproc->rt = INTERACTIVE_K;
+  }
   
   int err = 0;
   lock_acquire(glbl_mngr->file_sys_lk);

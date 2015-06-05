@@ -24,6 +24,10 @@ int write(int fd, const void *buf, size_t nbytes, ssize_t *ret)
     return EFAULT;
   }
 
+  if(fd < 2){
+    curproc->rt = INTERACTIVE_K;
+  }
+
   int err = 0;
   lock_acquire(glbl_mngr->file_sys_lk);
   open_file *f = file_list_get(curproc->open_files, fd);

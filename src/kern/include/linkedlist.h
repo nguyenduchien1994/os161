@@ -20,6 +20,7 @@ struct Linked_List {
   Linked_List_Node *last;
   unsigned length;
   unsigned limit;
+  bool monitor;
   struct lock * lk;
 };
 
@@ -93,6 +94,7 @@ typedef struct multi_queue{
   int which;//which queue to pull from
   int count;//how many times we have pulled from current queue
   int num_queues;
+  int size;
 } multi_queue;
 
 

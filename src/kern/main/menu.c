@@ -85,10 +85,6 @@ cmd_progthread(void *ptr, unsigned long nargs)
 		kprintf("Warning: argument passing from menu not supported\n");
 	}
 	
-	
-	if(proc_mngr_add(glbl_mngr, curproc, curthread) < 2){
-	  panic("Unable to start any user processes");
-	}
 
 	/* Hope we fit. */
 	KASSERT(strlen(args[0]) < sizeof(progname));
@@ -135,7 +131,7 @@ common_prog(int nargs, char **args)
 			proc /* new process */,
 			cmd_progthread /* thread function */,
 			args /* thread arg */, nargs /* thread arg */);
-	if (result) {
+	if (result>0) {
 		kprintf("thread_fork failed: %s\n", strerror(result));
 		return result;
 	}

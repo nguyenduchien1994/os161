@@ -25,19 +25,19 @@ proc_mngr* proc_mngr_create(void)
   //  ret->threads = kmalloc(sizeof(struct thread*) * 32767);
   KASSERT(ret->threads != NULL);
 
-  int turns[3];
-  turns[kernel] = 10;
-  turns[interactive] = 5;
-  turns[background] = 1;
-  ret->ready_queue = multi_queue_create(turns, 3);
+  int turns[4];
+  turns[INTERACTIVE_K] = 30;
+  turns[BACKGROUND_K] = 30;//same as INTERACTIVE_K, just for switching back to user mode
+  turns[INTERACTIVE_U] = 30;
+  turns[BACKGROUND_U] = 10;
+  ret->ready_queue = multi_queue_create(turns, 4);
   KASSERT(ret->ready_queue != NULL);
 
   ret->free_ids = stack_create();
   KASSERT(ret->free_ids != NULL);
   ret->free_ids->limit = PID_MAX-1;
   
-  ret->run_lk = lock_create("run lock");
-  KASSERT(ret->run_lk != NULL);
+  spinlock_init(&ret->run_lk);
 
   ret->file_sys_lk = lock_create("file syscall lock");
   KASSERT(ret->file_sys_lk != NULL);
@@ -57,18 +57,18 @@ void proc_mngr_destroy(proc_mngr *ptr)
 {
   KASSERT(ptr != NULL);
 
-  kfree(ptr->write_lk);
-  kfree(ptr->read_lk);
-  kfree(ptr->proc_sys_lk);
-  kfree(ptr->file_sys_lk);
-  kfree(ptr->run_lk);
+  spinlock_cleanup(&ptr->run_lk);
+  lock_destroy(ptr->write_lk);
+  lock_destroy(ptr->read_lk);
+  lock_destroy(ptr->proc_sys_lk);
+  lock_destroy(ptr->file_sys_lk);
   Linked_List_Node *runner = ptr->free_ids->first;
   while(runner != NULL){
     kfree(runner->data);
     runner = runner->next;
   }
-  kfree(ptr->free_ids);
-  kfree(ptr->ready_queue);
+  linkedlist_destroy(ptr->free_ids);
+  multi_queue_destroy(ptr->ready_queue);
   kfree(ptr->threads);
   kfree(ptr->procs);
   kfree(ptr);
@@ -126,12 +126,22 @@ struct thread* proc_mngr_get_thread(proc_mngr *this, proc *p)
   return ret;
 }
 
-void proc_mngr_make_ready(proc_mngr *this, proc *p)
+void proc_mngr_make_ready(proc_mngr *this, struct thread *t)
 {
   KASSERT(this != NULL);
 
-  multi_queue_add(this->ready_queue,p, (int)p->rt);
-  p->cur_state = ready;
+  Linked_List_Node *runner; 
+  for(int i = 0; i < this->ready_queue->num_queues; i++){
+    runner = ((queue*)*(this->ready_queue->queues+i))->first;
+    while(runner != NULL){
+      if(runner->data == t){
+	return;
+      }
+      runner = runner->next;
+    }
+  }
+  multi_queue_add(this->ready_queue,t, (int)t->t_proc->rt);
+  t->t_proc->cur_state = ready;
 }
 
 proc* proc_mngr_get_from_pid(proc_mngr *this, pid_t pid)

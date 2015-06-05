@@ -79,6 +79,7 @@
 void
 syscall(void *trapframe, unsigned long junk)
 {
+  curproc->rt = (curproc->rt == BACKGROUND_U ?  BACKGROUND_K : INTERACTIVE_K);
   (void)junk;
   struct trapframe *tf = (struct trapframe*)trapframe;
   
@@ -224,4 +225,5 @@ syscall(void *trapframe, unsigned long junk)
 	KASSERT(curthread->t_curspl == 0);
 	/* ...or leak any spinlocks */
 	KASSERT(curthread->t_iplhigh_count == 0);
+	curproc->rt = (curproc->rt == BACKGROUND_K ?  BACKGROUND_U : INTERACTIVE_U);
 }

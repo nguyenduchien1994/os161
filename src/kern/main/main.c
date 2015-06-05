@@ -97,6 +97,7 @@ boot(void)
 	 */
 
   vm_inited = false;
+  user_init = false;
 
 	kprintf("\n");
 	kprintf("OS/161 base system version %s\n", BASE_VERSION);
