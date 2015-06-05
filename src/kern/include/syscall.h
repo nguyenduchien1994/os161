@@ -45,7 +45,7 @@ void syscall(void *trapframe, unsigned long junk);
  * All functions that return, return the error code if an error occurred. The return value is passed through the ret pointer.
  */
 void _exit(int exitcode);
-int open(const char *filename, int flags);
+int open(const char *filename, int flags, int *ret);
 int read(int fd, void *buf, size_t buflen, ssize_t *ret);
 int write(int fd, const void *buf, size_t nbytes, ssize_t *ret);
 int lseek(int fd, off_t pos, int whence, off_t *ret);

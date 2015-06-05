@@ -160,14 +160,15 @@ syscall(void *trapframe, unsigned long junk)
 
   case SYS_lseek:
     err = lseek((int)tf->tf_a0,
-		(off_t)tf->tf_a1,
-		(int)tf->tf_a2,
+		(off_t)(tf->tf_a1 | tf->tf_a2),
+		(int)tf->tf_a3,
 		(off_t*)&retval);
     break;
 
   case SYS_open:
     err = open((const char*)tf->tf_a0,
-		  (int)tf->tf_a1);
+	       (int)tf->tf_a1,
+	       &retval);
     break;
 
   case SYS_read:

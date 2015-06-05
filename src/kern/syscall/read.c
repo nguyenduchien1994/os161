@@ -54,8 +54,8 @@ int read(int fd, void *buf, size_t buflen, ssize_t *ret)
       
       while (!err && read_uio.uio_resid)
       {
-	err = VOP_READ(to_read->vfile,&read_uio);
-	//err = to_read->vfile->vn_ops->vop_read(to_read->vfile,&read_uio);
+	//err = VOP_READ(to_read->vfile,&read_uio);
+	err = to_read->vfile->vn_ops->vop_read(to_read->vfile,&read_uio);
 	*ret = buflen - read_uio.uio_resid;
 	to_read->offset = read_uio.uio_offset; 
       }
