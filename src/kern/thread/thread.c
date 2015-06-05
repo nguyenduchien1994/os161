@@ -311,7 +311,6 @@ thread_panic(void)
 	curcpu->c_runqueue.tl_count = 0;
 	curcpu->c_runqueue.tl_head.tln_next = &curcpu->c_runqueue.tl_tail;
 	curcpu->c_runqueue.tl_tail.tln_prev = &curcpu->c_runqueue.tl_head;
-
 	/*
 	 * Ideally, we want to make sure sleeping threads don't wake
 	 * up and start running. However, there's no good way to track
@@ -464,7 +463,13 @@ thread_make_runnable(struct thread *target, bool already_have_lock)
 
 	/* Target thread is now ready to run; put it on the run queue. */
 	target->t_state = S_READY;
-	threadlist_addtail(&targetcpu->c_runqueue, target);
+
+	if(user_init){
+	  proc_mngr_make_ready(glbl_mngr, target);
+	}
+	else{
+	  threadlist_addtail(&targetcpu->c_runqueue, target);
+	}
 
 	if (targetcpu->c_isidle) {
 		/*
@@ -529,7 +534,7 @@ thread_fork(const char *name,
 		thread_destroy(newthread);
 		return result;
 	}
-
+	
 	/*
 	 * Because new threads come out holding the cpu runqueue lock
 	 * (see notes at bottom of thread_switch), we need to account
@@ -540,10 +545,18 @@ thread_fork(const char *name,
 	/* Set up the switchframe so entrypoint() gets called */
 	switchframe_init(newthread, entrypoint, data1, data2);
 
+	pid_t pid = 0;
+        if(user_init){
+	  pid = proc_mngr_add(glbl_mngr, proc, newthread);
+	}
+	
 	/* Lock the current cpu's run queue and make the new thread runnable */
 	thread_make_runnable(newthread, false);
 
-	return 0;
+	if(pid<0){
+	  return ENOMEM;
+	}
+	return -pid;
 }
 
 /*
@@ -592,7 +605,7 @@ thread_switch(threadstate_t newstate, struct wchan *wc, struct spinlock *lk)
 		splx(spl);
 		return;
 	}
-
+	
 	/* Put the thread in the right place. */
 	switch (newstate) {
 	    case S_RUN:
@@ -644,6 +657,7 @@ thread_switch(threadstate_t newstate, struct wchan *wc, struct spinlock *lk)
 		if (next == NULL) {
 			spinlock_release(&curcpu->c_runqueue_lock);
 			cpu_idle();
+			schedule();
 			spinlock_acquire(&curcpu->c_runqueue_lock);
 		}
 	} while (next == NULL);
@@ -712,6 +726,8 @@ thread_switch(threadstate_t newstate, struct wchan *wc, struct spinlock *lk)
 	/* Clear the wait channel and set the thread state. */
 	cur->t_wchan_name = NULL;
 	cur->t_state = S_RUN;
+
+	cur->t_proc->cur_state = running;
 
 	/* Unlock the run queue. */
 	spinlock_release(&curcpu->c_runqueue_lock);
@@ -796,7 +812,7 @@ thread_exit(void)
   
   /* Check the stack guard band. */
   thread_checkstack(cur);
-  
+
   /* Interrupts off on this processor */
   splhigh();
   if(pid != kproc->pid){
@@ -829,10 +845,37 @@ thread_yield(void)
 void
 schedule(void)
 {
-	/*
-	 * You can write this. If we do nothing, threads will run in
-	 * round-robin fashion.
-	 */
+  if(user_init){
+ 
+    spinlock_acquire(&curcpu->c_runqueue_lock);
+    struct threadlist *rq = &curcpu->c_runqueue;
+     
+    /*
+    struct thread *t = (struct thread *)multi_queue_remove(glbl_mngr->ready_queue);
+    int curcount = glbl_mngr->ready_queue->count;
+    if(t == NULL){
+      spinlock_release(&curcpu->c_runqueue_lock);
+      return;
+    }
+
+    threadlist_addtail(rq, t);  
+    
+    while(glbl_mngr->ready_queue->count == curcount){
+      proc_mngr_make_ready(glbl_mngr, t);
+      t = (struct thread*)multi_queue_remove(glbl_mngr->ready_queue);
+      threadlist_addtail(rq, t);
+    }
+    */
+    if(threadlist_isempty(rq)){
+      struct thread *t = (struct thread *)multi_queue_remove(glbl_mngr->ready_queue);
+      if(t == NULL){
+	spinlock_release(&curcpu->c_runqueue_lock);
+	return;
+      }
+      threadlist_addtail(rq, t);
+    }
+    spinlock_release(&curcpu->c_runqueue_lock);
+  }
 }
 
 /*
@@ -855,6 +898,7 @@ schedule(void)
 void
 thread_consider_migration(void)
 {
+  if(user_init){
 	unsigned my_count, total_count, one_share, to_send;
 	unsigned i, numcpus;
 	struct cpu *c;
@@ -955,6 +999,7 @@ thread_consider_migration(void)
 
 	KASSERT(threadlist_isempty(&victims));
 	threadlist_cleanup(&victims);
+  }
 }
 
 ////////////////////////////////////////////////////////////

@@ -93,7 +93,8 @@ proc_create(const char *name)
 	// Complete
 	proc->program_counter = 0;
 	proc->cur_state = new;
-	
+	proc->rt = BACKGROUND_K;
+
 	proc->open_files = file_list_create();
 	if(proc->open_files == NULL){
 	  kfree(proc->p_name);
@@ -330,6 +331,9 @@ proc_create_runprogram(const char *name)
 	
 	if(glbl_mngr == NULL){
 	  glbl_mngr = proc_mngr_create();
+	  KASSERT(glbl_mngr != NULL);
+	  proc_mngr_add(glbl_mngr, curproc, curthread);
+	  user_init = true;
 	} 
 
 
@@ -524,7 +528,7 @@ proc* proc_copy(void)
   }
   ret->p_cwd = curproc->p_cwd;
   
-  
+  ret->rt = curproc->rt;
   
   ret->pid = 0;
   //copy
