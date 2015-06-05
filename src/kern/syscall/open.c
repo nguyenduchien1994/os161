@@ -10,13 +10,12 @@
 #include <kern/errno.h>
 #include <vnode.h>
 
-int open(const char *filename, int flags)
+int open(const char *filename, int flags, int *ret)
 {
-  
    if (filename == NULL)                                                                                    
-    {
-      return EFAULT;                                                                                                        }
-
+   {
+     return EFAULT;                                                                                                     
+   }
    lock_acquire(glbl_mngr->file_sys_lk);
 
    void *namedest = kmalloc(sizeof(filename));
@@ -37,7 +36,7 @@ int open(const char *filename, int flags)
 
 
    // 3 eqauls invalid or if over 64 (1000000)
-   if(((flags & 3) == 3) || flags > 64)
+   if(((flags & 3) == 3) || flags >= 128)
    {
      kfree(namedest);
      lock_release(glbl_mngr->file_sys_lk);
@@ -45,16 +44,17 @@ int open(const char *filename, int flags)
    }
 
    mode_t mode = 0000;
+   int rw = flags%3;// Mod the flags with 3
    
-   if(flags & O_RDONLY)
+   if(rw == O_RDONLY)
    {
      mode = 0444;
    } 
-   else if(flags & O_WRONLY)
+   else if(rw == O_WRONLY)
    {
      mode = 0222;
    }
-   else if(flags & O_RDWR)
+   else if(rw == O_RDWR)
    {
      mode = 0666; 
    } 
@@ -65,9 +65,14 @@ int open(const char *filename, int flags)
      return EINVAL;
    }
 
-
    struct vnode *file = kmalloc(sizeof(struct vnode));
-   
+   if (file == NULL)
+   {
+     kfree(namedest);
+     lock_release(glbl_mngr->file_sys_lk);
+     return ENOMEM;
+   }
+  
    err = vfs_open(namedest, flags, mode, &file); 
   
    if (err)
@@ -80,7 +85,14 @@ int open(const char *filename, int flags)
 
    open_file *openfile = open_file_create(file, 0, flags); 
    //err = 
-   file_list_add(curproc->open_files, openfile);
+   *ret = file_list_add(curproc->open_files, openfile);
+   if (*ret < 0)
+   {
+     kfree(namedest);
+     kfree(file);
+     lock_release(glbl_mngr->file_sys_lk);
+     return ENOMEM;
+   }
    open_file_decref(openfile);
 
    kfree(namedest);
