@@ -37,8 +37,12 @@ int waitpid(pid_t pid, int *status, int options, pid_t *ret)
   lock_release(glbl_mngr->proc_sys_lk);
   cv_wait(myproc->exit_cv, myproc->exit_lock);
   
-  if(status != NULL)
+  if(status != NULL){
     *status = myproc->exit_status;
+  }
+  else {
+    return EFAULT;
+  }
   V(myproc->exit_sem);
   
   lock_release(myproc->exit_lock);
