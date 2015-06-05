@@ -26,11 +26,11 @@ int execv(const char *program, char **args)
    }
 
    int err = copyin((const_userptr_t)program, progdest, sizeof(program));
-
-   if (err)
+   
+   if (err != 0)
    {
      kfree(progdest);
-      return EIO;
+     return EIO;
    }
 
    bool keep_going = true;
@@ -38,26 +38,29 @@ int execv(const char *program, char **args)
    int runner = 0;
    int argno = 0;
    char *curarg = progdest[argno];
-   
+
    while(keep_going)
    {
-     if(progdest[runner + 1] == NULL)
+     if(progdest[runner] == NULL)
      {
        keep_going = false;
      }
      else if(progdest[runner] == '\0')
      {
        nargs++;
-       argno = argno + 1;
+       //argno = argno + 1;
        curarg = progdest[argno];
+       argno = argno + 1;
      }
      else
      {
        runner = runner + 1;
      }
    }
-   kfree(progdest);
+   //kprintf("%s",program);
+   //err = copyout(program,(userptr_t)progdest, sizeof(program));
 
+   kfree(progdest);
    lock_acquire(glbl_mngr->proc_sys_lk);
 
    struct addrspace *as;
@@ -83,7 +86,7 @@ int execv(const char *program, char **args)
    /* Switch to it and activate it. */
    proc_setas(as);
    as_activate();
-   
+
    /* Load the executable. */
    result = load_elf(v, &entrypoint);
    if (result) {
@@ -92,14 +95,13 @@ int execv(const char *program, char **args)
      lock_release(glbl_mngr->proc_sys_lk);
      return result;
    }
-   
    /* Done with the file now. */
    vfs_close(v);
-   
+
    /* Define the user stack in the address space */
    result = as_define_stack(as, &stackptr);
    lock_release(glbl_mngr->proc_sys_lk);
-
+   
    if (result) {
      /* p_addrspace will go away when curproc is destroyed */
      return result;
@@ -109,9 +111,8 @@ int execv(const char *program, char **args)
    enter_new_process(nargs /*argc*/, (userptr_t)&args /*userspace addr of argv*/,
 		     NULL /*userspace addr of environment*/,
 		     stackptr, entrypoint);
-   
+
 	/* enter_new_process does not return. */
    panic("enter_new_process returned\n");
    return EINVAL;
-   
 }
